@@ -5,7 +5,7 @@ from decimal import Decimal
 from dotenv import dotenv_values
 from ibapi.client import EClient
 from ibapi.common import TickAttrib
-from ibapi.contract import Contract
+from ibapi.contract import Contract, ContractDetails
 from ibapi.execution import Execution
 from ibapi.order import Order
 from ibapi.order_state import OrderState
@@ -41,10 +41,24 @@ class IBapi(EWrapper, EClient):
         for key, values in config_vars["stocks"].items():
             self.stock_price_dic[key] = StockInfo(stock=key)
 
+        # contract details for options
+        self.options_strike_price_dict: dict = {}
+        # data structure to hold current price requests
+        self.stock_current_price_dict: dict = {}
+
     def nextValidId(self, orderId: int | None) -> None:
         """Callback function to update the next valid order id"""
         self.nextorderId = orderId
         logger.info(f"The next valid order id is: {self.nextorderId}.")
+
+    def contractDetails(self, reqId: int, contractDetails: ContractDetails) -> None:
+        """Callback function to receive contract details for option (OPT) type contracts."""
+        contract = contractDetails.contract
+
+        if contract.secType == "OPT":
+            if contract.symbol not in self.options_strike_price_dict.keys():
+                self.options_strike_price_dict[contract.symbol] = []
+            self.options_strike_price_dict[contract.symbol].append(contract.strike)
 
     def orderStatus(self, orderId: int, status: str, filled: Decimal, remaining: Decimal, avgFullPrice: float,
                     permId: int, parentId: int, lastFillPrice: float, clientId: int, whyHeld: str, mktCapPrice: float) -> None:
@@ -69,11 +83,12 @@ class IBapi(EWrapper, EClient):
               execution.orderId, execution.shares, execution.lastLiquidity)
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
-        """Ewrapper method to receive price information from reqMktData()."""
-        if tickType == 2:
-            ticker_symbol = self.dic_orderid_to_ticker[reqId]
-            self.stock_price_dic[ticker_symbol].price = price
-            logger.info(f'The current ask price is: {price} for stock {self.stock_price_dic[ticker_symbol].stock}.')
+        """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""
+        if reqId not in self.stock_current_price_dict.keys():
+            self.stock_current_price_dict[reqId] = []
+        if tickType == 1 or tickType == 2:
+            self.stock_current_price_dict[reqId].append(price)
+            logger.info(f'The current ask price is: {price} for stock.')
 
     def marketDataType(self, reqId: int, marketDataType: int) -> None:
         """Ewrapper method to receive if market data is live/delayed/frozen from reqMktData()."""
