@@ -62,7 +62,7 @@ def get_stock_and_strike(app: IBapi, stock_list: list, expiry_date: str | None =
                                                           dict_stock_price[stock_ticker])
         dict_result[stock_ticker] = closest_strike_price
 
-    stock_ticker = np.max(dict_result, key=dict_result.get)
+    stock_ticker = max(dict_result, key=dict_result.get) # type: ignore
     min_value = dict_result[stock_ticker]
 
     return stock_ticker, min_value
