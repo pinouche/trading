@@ -13,9 +13,11 @@ def app_connection(appl: IBapi) -> None:
 
 
 def data_is_live(appl: IBapi) -> None:
-    request_market_data(appl, "TSLA")
-    assert appl.stock_price_dic['TSLA'].market_is_live is True
-    assert isinstance(appl.stock_price_dic['TSLA'].price, float)
+    id_order = appl.nextorderId
+    request_market_data(appl, "TSLA", id_order)
+    assert appl.stock_current_price_dict[id_order].market_is_live is True
+    assert isinstance(appl.stock_current_price_dict[id_order].price, list)
+    assert len(appl.stock_current_price_dict[id_order].price) == 2
 
 
 def test_full_app(app: IBapi) -> None:

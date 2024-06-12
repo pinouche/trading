@@ -36,11 +36,6 @@ class IBapi(EWrapper, EClient):
 
         self.dic_orderid_to_ticker: dict = {}
 
-        # build a dic for each stock to store price info and market_is_live
-        self.stock_price_dic = {}
-        for key, values in config_vars["stocks"].items():
-            self.stock_price_dic[key] = StockInfo(stock=key)
-
         # contract details for options
         self.options_strike_price_dict: dict = {}
         # data structure to hold current price requests
@@ -85,15 +80,25 @@ class IBapi(EWrapper, EClient):
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""
         if reqId not in self.stock_current_price_dict.keys():
-            self.stock_current_price_dict[reqId] = []
+            self.stock_current_price_dict[reqId] = StockInfo()
         if tickType == 1 or tickType == 2:
-            self.stock_current_price_dict[reqId].append(price)
-            logger.info(f'The current ask price is: {price} for stock.')
+
+            # Initialize the price list if it is None
+            if self.stock_current_price_dict[reqId].price is None:
+                self.stock_current_price_dict[reqId].price = []
+
+            # Append the new price to the list
+            self.stock_current_price_dict[reqId].price.append(price)
+            logger.info(f'The current ask price is: {price} for reqId {reqId}.')
 
     def marketDataType(self, reqId: int, marketDataType: int) -> None:
         """Ewrapper method to receive if market data is live/delayed/frozen from reqMktData()."""
+        if reqId not in self.stock_current_price_dict.keys():
+            self.stock_current_price_dict[reqId] = StockInfo()
         if marketDataType == 1:
-            ticker_symbol = self.dic_orderid_to_ticker[reqId]
-            self.stock_price_dic[ticker_symbol].market_is_live = True
+
+            # Append the new price to the list
+            self.stock_current_price_dict[reqId].market_is_live = True
+
             logger.info(
-                f'Live data is: {True} for stock {self.stock_price_dic[ticker_symbol].stock}.')
+                f'Live data is: {True} for reqId {reqId}.')
