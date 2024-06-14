@@ -1,9 +1,6 @@
 
 from trading.api.ibapi_class import IBapi
 from trading.core.api_actions.request_mkt_data import request_market_data
-from trading.utils import config_load
-
-config_vars = config_load("./config.yaml")
 
 
 def app_connection(appl: IBapi) -> None:

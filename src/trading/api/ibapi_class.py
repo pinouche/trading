@@ -2,7 +2,6 @@
 
 from decimal import Decimal
 
-from dotenv import dotenv_values
 from ibapi.client import EClient
 from ibapi.common import TickAttrib
 from ibapi.contract import Contract, ContractDetails
@@ -13,10 +12,6 @@ from ibapi.wrapper import EWrapper
 from loguru import logger
 
 from trading.core.data_models.data_models import StockInfo
-from trading.utils import config_load
-
-env_vars = dotenv_values(".env")
-config_vars = config_load("./config.yaml")
 
 
 class IBapi(EWrapper, EClient):

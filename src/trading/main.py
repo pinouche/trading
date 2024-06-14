@@ -35,6 +35,8 @@ def main() -> IBapi:
             print('Waiting for connection... (retrying)')
             time.sleep(1)
 
+    # Get the strike price and the stock
+
     return appl
 
 
