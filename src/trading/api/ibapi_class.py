@@ -49,6 +49,7 @@ class IBapi(EWrapper, EClient):
     def contractDetails(self, reqId: int, contractDetails: ContractDetails) -> None:
         """Callback function to receive contract details for option (OPT) type contracts."""
         contract = contractDetails.contract
+        print("CONTRACT", contract)
 
         if contract.secType == "OPT":
             if contract.symbol not in self.options_strike_price_dict.keys():
