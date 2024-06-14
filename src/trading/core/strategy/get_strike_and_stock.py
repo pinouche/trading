@@ -18,7 +18,7 @@ def compute_closest_percentage(strike_prices: np.array, stock_price: float) -> n
     return closest_strike
 
 
-def get_stock_and_strike(app: IBapi, stock_list: list, expiry_date: str | None = None) -> tuple[str, float]:
+def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None = None) -> tuple[str, float]:
     """Return the stock and the associated strike price for which the current price of the stock is the closest to
     the strike price. The strike price has to be in-the-money (lower than the current stock price).
     """
@@ -40,7 +40,7 @@ def get_stock_and_strike(app: IBapi, stock_list: list, expiry_date: str | None =
                 dict_options_strike_price[stock_ticker] = app.options_strike_price_dict[stock_ticker]
             except KeyError:
                 condition = True
-        app.reqIds(-1)  # increment the next valid id (appl.nextorderId)
+        app.nextorderId += 1  # type: ignore
 
         # define the stock contract
         stock_contract = get_stock_contract(stock_ticker)
@@ -49,17 +49,19 @@ def get_stock_and_strike(app: IBapi, stock_list: list, expiry_date: str | None =
         condition = True
         while condition:
             try:
+                price_list = app.stock_current_price_dict[app.nextorderId].price
                 # compute the mid-point between current bid and ask
-                if len(app.stock_current_price_dict[app.nextorderId]) == 2:
-                    mid_price = np.mean(np.array(app.stock_current_price_dict[app.nextorderId])[:2])
+                if len(price_list) == 2:
+                    mid_price = np.mean(np.array(price_list)[:2])
                     dict_stock_price[stock_ticker] = mid_price
                     condition = False
-            except (IndexError, ValueError, KeyError):
+            except (IndexError, ValueError, KeyError, TypeError):
                 condition = True
-        app.reqIds(-1)  # increment the next valid id (appl.nextorderId)
+        app.nextorderId += 1 # type: ignore
 
         closest_strike_price = compute_closest_percentage(dict_options_strike_price[stock_ticker],
                                                           dict_stock_price[stock_ticker])
+        print("CLOSEST STRIKE PRICE", stock_ticker, closest_strike_price)
         dict_result[stock_ticker] = closest_strike_price
 
     stock_ticker = max(dict_result, key=dict_result.get)  # type: ignore

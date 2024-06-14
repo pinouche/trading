@@ -44,7 +44,6 @@ class IBapi(EWrapper, EClient):
     def contractDetails(self, reqId: int, contractDetails: ContractDetails) -> None:
         """Callback function to receive contract details for option (OPT) type contracts."""
         contract = contractDetails.contract
-        print("CONTRACT", contract)
 
         if contract.secType == "OPT":
             if contract.symbol not in self.options_strike_price_dict.keys():
@@ -85,7 +84,11 @@ class IBapi(EWrapper, EClient):
 
             # Append the new price to the list
             self.stock_current_price_dict[reqId].price.append(price)
-            logger.info(f'The current ask price is: {price} for reqId {reqId}.')
+
+            spread_side = "bid"
+            if tickType == 2:
+                spread_side = "ask"
+            logger.info(f'The current {spread_side} price is: {price} for reqId {reqId}.')
 
     def marketDataType(self, reqId: int, marketDataType: int) -> None:
         """Ewrapper method to receive if market data is live/delayed/frozen from reqMktData()."""
