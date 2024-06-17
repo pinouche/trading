@@ -12,9 +12,8 @@ def test_request_data_options_contract(app: IBapi) -> None:
     option_contract = get_options_contract(ticker=ticker_symbol, contract_strike=110.0, expiry_date=date)
     app.reqMktData(app.nextorderId, option_contract, '', True, False, [])
     time.sleep(1)
-
     assert isinstance(app.stock_current_price_dict[app.nextorderId].price, list)
     assert len(app.stock_current_price_dict[app.nextorderId].price) == 2
     assert np.sum([isinstance(price, float) for price in app.stock_current_price_dict[app.nextorderId].price]) == 2
-
+    app.reqIds(-1)
     app.disconnect()
