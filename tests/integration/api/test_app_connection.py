@@ -1,6 +1,6 @@
 
+from trading.api.api_actions.request_data.request_mkt_data import request_market_data
 from trading.api.ibapi_class import IBapi
-from trading.core.api_actions.request_mkt_data import request_market_data
 
 
 def app_connection(appl: IBapi) -> None:
