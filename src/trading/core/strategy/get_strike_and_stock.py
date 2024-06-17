@@ -57,7 +57,7 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
                     condition = False
             except (IndexError, ValueError, KeyError, TypeError):
                 condition = True
-        app.nextorderId += 1 # type: ignore
+        app.nextorderId += 1  # type: ignore
 
         closest_strike_price = compute_closest_percentage(dict_options_strike_price[stock_ticker],
                                                           dict_stock_price[stock_ticker])

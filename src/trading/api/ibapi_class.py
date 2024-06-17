@@ -74,6 +74,8 @@ class IBapi(EWrapper, EClient):
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""
+        print("WE ARE HERE 2", reqId)
+
         if reqId not in self.stock_current_price_dict.keys():
             self.stock_current_price_dict[reqId] = StockInfo()
         if tickType == 1 or tickType == 2:

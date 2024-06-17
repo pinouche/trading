@@ -14,4 +14,5 @@ def test_options_contract(app: IBapi) -> None:
     assert ticker_symbol in app.options_strike_price_dict
     assert isinstance(app.options_strike_price_dict[ticker_symbol], list)
     assert isinstance(app.options_strike_price_dict[ticker_symbol][0], float)
+    app.reqIds(-1)
     app.disconnect()
