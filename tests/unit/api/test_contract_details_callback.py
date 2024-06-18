@@ -10,9 +10,11 @@ def test_options_contract(app: IBapi) -> None:
     date = get_next_friday()
     option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
     app.reqContractDetails(app.nextorderId, option_contract)
-    time.sleep(5)
+    time.sleep(1)
+
     assert ticker_symbol in app.options_strike_price_dict
     assert isinstance(app.options_strike_price_dict[ticker_symbol], list)
     assert isinstance(app.options_strike_price_dict[ticker_symbol][0], float)
-    app.reqIds(-1)
+
+    app.nextorderId += 1  # type: ignore
     app.disconnect()
