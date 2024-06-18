@@ -6,15 +6,10 @@ from trading.api.ibapi_class import IBapi
 from trading.utils import get_next_friday
 
 
-def test_request_data_options_contract(app: IBapi) -> None:
+def test_request_data_options_contract(app: IBapi, options_strikes: list[float]) -> None:
     ticker_symbol = "TSLA"
     date = get_next_friday()
-    option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
-
-    # get the available strike prices
-    app.reqContractDetails(app.nextorderId, option_contract)
-    time.sleep(10)
-    first_strike_price = app.options_strike_price_dict[ticker_symbol][0]
+    first_strike_price = options_strikes[0]
     app.nextorderId += 1  # type: ignore
 
     # define option contract and place order
@@ -27,4 +22,3 @@ def test_request_data_options_contract(app: IBapi) -> None:
     assert np.sum([isinstance(price, float) for price in app.stock_current_price_dict[app.nextorderId].price]) == 2
 
     app.nextorderId += 1  # type: ignore
-    app.disconnect()

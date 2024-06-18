@@ -1,10 +1,13 @@
 import threading
 import time
+from typing import Any
 
 import pytest
 from dotenv import dotenv_values
 from loguru import logger
+from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.ibapi_class import IBapi
+from trading.utils import get_next_friday
 
 env_vars = dotenv_values(".env")
 
@@ -31,3 +34,13 @@ def app() -> IBapi:
             time.sleep(1)
 
     return appl
+
+
+@pytest.fixture()
+def options_strikes(app: IBapi) -> list[float] | Any:
+    ticker_symbol = "TSLA"
+    date = get_next_friday()
+    option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
+    app.reqContractDetails(app.nextorderId, option_contract)
+    time.sleep(10)
+    return app.options_strike_price_dict[ticker_symbol]

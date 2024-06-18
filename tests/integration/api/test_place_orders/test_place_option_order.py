@@ -9,10 +9,9 @@ from trading.core.strategy.get_strike_and_stock import compute_closest_percentag
 from trading.utils import get_next_friday
 
 
-def test_place_order_options_contract(app: IBapi) -> None:
+def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) -> None:
     ticker_symbol = "TSLA"
     date = get_next_friday()
-    option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
     stock_contract = get_stock_contract(ticker=ticker_symbol)
 
     # get the current price of the stock
@@ -23,11 +22,7 @@ def test_place_order_options_contract(app: IBapi) -> None:
     app.nextorderId += 1  # type: ignore
 
     # get the available strike prices for the option contract
-    app.reqContractDetails(app.nextorderId, option_contract)
-    time.sleep(5)
-    strike_price_list = app.options_strike_price_dict[ticker_symbol]
-    closest_itm_strike = compute_closest_percentage(strike_price_list, mid_price)
-    app.nextorderId += 1  # type: ignore
+    closest_itm_strike = compute_closest_percentage(options_strikes, mid_price)
 
     # get the price of the options for given strike price
     contract = get_options_contract(ticker=ticker_symbol, contract_strike=closest_itm_strike, expiry_date=date)
