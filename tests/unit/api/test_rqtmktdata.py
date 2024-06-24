@@ -15,7 +15,7 @@ def test_request_data_options_contract(app: IBapi, options_strikes: list[float])
     # define option contract and place order
     option_contract = get_options_contract(ticker=ticker_symbol, contract_strike=first_strike_price, expiry_date=date)
     app.reqMktData(app.nextorderId, option_contract, '', True, False, [])
-    time.sleep(10)
+    time.sleep(5)
 
     assert isinstance(app.stock_current_price_dict[app.nextorderId].price, list)
     assert len(app.stock_current_price_dict[app.nextorderId].price) == 2

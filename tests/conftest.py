@@ -12,15 +12,26 @@ from trading.utils import get_next_friday
 env_vars = dotenv_values(".env")
 
 
+@pytest.fixture(scope="session")
+def client_id() -> dict[str, int]:
+    return {
+        "value": int(env_vars["CLIENT_ID"])
+    }
+
+
+# Fixture to create and initialize the IBapi application
 @pytest.fixture()
-def app() -> IBapi:
+def app(client_id: dict[str, int]) -> IBapi:
     def run_loop() -> None:
         appl.run()
+
+    # Increment client ID
+    client_id["value"] += 1
 
     appl = IBapi()
     appl.connect(env_vars.get("IP_ADDRESS"),
                  int(env_vars.get("PORT")),
-                 int(env_vars.get("CLIENT_ID")))
+                 client_id["value"])
 
     api_thread = threading.Thread(target=run_loop, daemon=True)
     api_thread.start()
@@ -42,5 +53,5 @@ def options_strikes(app: IBapi) -> list[float] | Any:
     date = get_next_friday()
     option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
     app.reqContractDetails(app.nextorderId, option_contract)
-    time.sleep(10)
+    time.sleep(5)
     return app.options_strike_price_dict[ticker_symbol]
