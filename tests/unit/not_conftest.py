@@ -26,8 +26,7 @@ def app() -> IBapi:
 
     time.sleep(2)
 
-    yield appl
-    appl.disconnect()
+    return appl
 
 
 @pytest.fixture()

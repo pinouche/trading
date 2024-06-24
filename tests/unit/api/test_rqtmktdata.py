@@ -22,3 +22,4 @@ def test_request_data_options_contract(app: IBapi, options_strikes: list[float])
     assert np.sum([isinstance(price, float) for price in app.stock_current_price_dict[app.nextorderId].price]) == 2
 
     app.nextorderId += 1  # type: ignore
+    app.disconnect()
