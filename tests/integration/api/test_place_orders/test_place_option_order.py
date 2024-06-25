@@ -37,8 +37,24 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     mid_price = np.mean(app.stock_current_price_dict[app.nextorderId].price)
     app.nextorderId += 1  # type: ignore
 
-    order = create_parent_order(app.nextorderId, "SELL", mid_price, 1)  # type: ignore[arg-type]
+    number_of_options = 3
+    order = create_parent_order(app.nextorderId, "SELL", mid_price, number_of_options, False)  # type: ignore[arg-type]
     app.placeOrder(app.nextorderId, contract, order)
+
+    while app.nextorderId not in app.execution_details:
+        time.sleep(0.2)
+
+    while app.nextorderId not in app.order_status:
+        time.sleep(0.2)
+
+    # here we wait for all the options to have been sold before buying stocks
+    while True:
+        remaining = app.order_status[app.nextorderId]["remaining"]
+        if remaining == 0:
+            break
+
+    assert app.order_status[app.nextorderId]["remaining"] == 0
+    assert app.order_status[app.nextorderId]["filled"] == number_of_options
 
     app.nextorderId += 1  # type: ignore
     app.disconnect()

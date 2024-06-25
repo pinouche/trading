@@ -3,7 +3,7 @@
 from ibapi.order import Order
 
 
-def create_parent_order(order_id: int, action: str, price: float, quantity: int) -> Order:
+def create_parent_order(order_id: int, action: str, price: float, quantity: int, allornone: bool = True) -> Order:
     """Implements stock order.
     action: str (SELL OR BUY)
     price: float (price for the limit order)
@@ -16,6 +16,6 @@ def create_parent_order(order_id: int, action: str, price: float, quantity: int)
     order.totalQuantity = quantity
     order.orderType = 'LMT'
     order.lmtPrice = price
-    order.allOrNone = True
+    order.allOrNone = allornone
 
     return order

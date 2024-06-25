@@ -25,6 +25,8 @@ class IBapi(EWrapper, EClient):
 
         # orders details dict
         self.order_status: dict = {}
+        # order execution details
+        self.execution_details: dict = {}
 
         # next valid order
         self.nextorderId: int | None = None
@@ -50,13 +52,6 @@ class IBapi(EWrapper, EClient):
                 self.options_strike_price_dict[contract.symbol] = []
             self.options_strike_price_dict[contract.symbol].append(contract.strike)
 
-    def orderStatus(self, orderId: int, status: str, filled: Decimal, remaining: Decimal, avgFullPrice: float,
-                    permId: int, parentId: int, lastFillPrice: float, clientId: int, whyHeld: str, mktCapPrice: float) -> None:
-        """Overwrite Ewrapper orderStatus callback function."""
-        print('orderStatus - orderid:', orderId, 'status:', status, 'filled', filled, 'remaining', remaining,
-              'lastFillPrice', lastFillPrice)
-        self.order_status[orderId] = {"status": status, "filled": filled, "remaining": remaining}
-
     def get_open_order_status(self) -> None:
         """Trigger the orderStatus EWrapper callback function."""
         self.order_status = {}  # reset the dictionary
@@ -71,6 +66,14 @@ class IBapi(EWrapper, EClient):
         """Overwrite Ewrapper execDetails callback function."""
         print('Order Executed: ', reqId, contract.symbol, contract.secType, contract.currency, execution.execId,
               execution.orderId, execution.shares, execution.lastLiquidity)
+        self.execution_details[execution.orderId] = {"contract": contract, "execution": execution}
+
+    def orderStatus(self, orderId: int, status: str, filled: Decimal, remaining: Decimal, avgFullPrice: float,
+                    permId: int, parentId: int, lastFillPrice: float, clientId: int, whyHeld: str, mktCapPrice: float) -> None:
+        """Overwrite Ewrapper orderStatus callback function."""
+        print('orderStatus - orderid:', orderId, 'status:', status, 'filled', filled, 'remaining', remaining,
+              'lastFillPrice', lastFillPrice)
+        self.order_status[orderId] = {"status": status, "filled": filled, "remaining": remaining}
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""
