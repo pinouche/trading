@@ -1,6 +1,7 @@
 """Fetch the options strikes for several stocks and returns the stock and strike for which the strike is closest to current price"""
 
 import numpy as np
+from loguru import logger
 
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
@@ -61,7 +62,8 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
 
         closest_strike_price = compute_closest_percentage(dict_options_strike_price[stock_ticker],
                                                           dict_stock_price[stock_ticker])
-        print("CLOSEST STRIKE PRICE", stock_ticker, closest_strike_price, dict_stock_price[stock_ticker])
+        logger.info(f"Closest price for stock: {stock_ticker}, strike price: {closest_strike_price}, "
+                    f"stock price: {dict_stock_price[stock_ticker]}")
         dict_result[stock_ticker] = closest_strike_price
 
     stock_ticker = min(dict_result, key=dict_result.get)  # type: ignore

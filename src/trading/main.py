@@ -47,8 +47,9 @@ def main() -> IBapi:
         expiry_date = get_next_friday()
 
     stock_ticker, min_value = get_strike_and_stock(appl, stock_list, expiry_date)
-    print("WE ARE HERE", stock_ticker, min_value)
+    logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {min_value}.")
 
+    # TODO: Implement getting the price of the above option and fire a sell order (look at the test 'test_place_option_order').
     # number_of_options = 3
     # order = create_parent_order(app.nextorderId, "SELL", mid_price, number_of_options, False)  # type: ignore[arg-type]
     # app.placeOrder(app.nextorderId, contract, order)
