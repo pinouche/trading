@@ -5,6 +5,10 @@
 
 * `poetry install`
 * `pre-commit install`
+*
+## Run main:
+
+`python3 src/trading/main.py`
 
 ## Run tests:
 

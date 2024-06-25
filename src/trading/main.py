@@ -37,7 +37,7 @@ def main() -> IBapi:
             logger.info('Waiting for connection... (retrying)')
             time.sleep(1)
 
-    # Get the strike price and the stock
+    # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
     expiry_date = datetime.today().strftime("%Y%m%d")
 
@@ -48,6 +48,10 @@ def main() -> IBapi:
 
     stock_ticker, min_value = get_strike_and_stock(appl, stock_list, expiry_date)
     print("WE ARE HERE", stock_ticker, min_value)
+
+    # number_of_options = 3
+    # order = create_parent_order(app.nextorderId, "SELL", mid_price, number_of_options, False)  # type: ignore[arg-type]
+    # app.placeOrder(app.nextorderId, contract, order)
 
     return appl
 

@@ -61,10 +61,10 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
 
         closest_strike_price = compute_closest_percentage(dict_options_strike_price[stock_ticker],
                                                           dict_stock_price[stock_ticker])
-        print("CLOSEST STRIKE PRICE", stock_ticker, closest_strike_price)
+        print("CLOSEST STRIKE PRICE", stock_ticker, closest_strike_price, dict_stock_price[stock_ticker])
         dict_result[stock_ticker] = closest_strike_price
 
-    stock_ticker = max(dict_result, key=dict_result.get)  # type: ignore
+    stock_ticker = min(dict_result, key=dict_result.get)  # type: ignore
     min_value = dict_result[stock_ticker]
 
     return stock_ticker, min_value
