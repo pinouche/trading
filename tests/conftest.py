@@ -53,5 +53,6 @@ def options_strikes(app: IBapi) -> list[float] | Any:
     date = get_next_friday()
     option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
     app.reqContractDetails(app.nextorderId, option_contract)
-    time.sleep(5)
+    while ticker_symbol not in app.options_strike_price_dict:
+        time.sleep(1.0)
     return app.options_strike_price_dict[ticker_symbol]

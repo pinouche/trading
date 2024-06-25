@@ -16,7 +16,10 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
 
     # get the current price of the stock
     app.reqMktData(app.nextorderId, stock_contract, '', True, False, [])
-    time.sleep(5)
+
+    while app.nextorderId not in app.stock_current_price_dict:
+        time.sleep(1.0)
+
     stock_price_list = app.stock_current_price_dict[app.nextorderId].price
     mid_price = np.mean(stock_price_list)
     app.nextorderId += 1  # type: ignore
@@ -27,7 +30,10 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     # get the price of the options for given strike price
     contract = get_options_contract(ticker=ticker_symbol, contract_strike=closest_itm_strike, expiry_date=date)
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
-    time.sleep(2)
+
+    while app.nextorderId not in app.stock_current_price_dict:
+        time.sleep(1.0)
+
     mid_price = np.mean(app.stock_current_price_dict[app.nextorderId].price)
     app.nextorderId += 1  # type: ignore
 
