@@ -4,4 +4,6 @@ stocks:
   - AMD
   - ARM
 
+number_of_options: 1
+
 percentage_profit_taking: 1

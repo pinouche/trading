@@ -34,10 +34,10 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     while app.nextorderId not in app.stock_current_price_dict:
         time.sleep(1.0)
 
-    mid_price = np.mean(app.stock_current_price_dict[app.nextorderId].price)
+    mid_price = np.round(np.mean(app.stock_current_price_dict[app.nextorderId].price), 2)
     app.nextorderId += 1  # type: ignore
 
-    number_of_options = 3
+    number_of_options = 1
     order = create_parent_order(app.nextorderId, "SELL", mid_price, number_of_options, False)  # type: ignore[arg-type]
     app.placeOrder(app.nextorderId, contract, order)
 

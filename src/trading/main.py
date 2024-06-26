@@ -4,10 +4,15 @@ import threading
 import time
 from datetime import datetime
 
+import numpy as np
 from dotenv import dotenv_values
 from loguru import logger
 
+from trading.api.api_actions.place_orders.place_option_orders import place_option_order
+from trading.api.api_actions.request_data.request_mkt_data import request_market_data_option
+from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.ibapi_class import IBapi
+from trading.api.orders.option_orders import create_parent_order
 from trading.core.strategy.get_strike_and_stock import get_strike_and_stock
 from trading.utils import config_load, get_next_friday
 
@@ -49,13 +54,25 @@ def main() -> IBapi:
     stock_ticker, min_value = get_strike_and_stock(appl, stock_list, expiry_date)
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {min_value}.")
 
-    # TODO: Implement getting the price of the above option and fire a sell order (look at the test 'test_place_option_order').
-    # number_of_options = 3
-    # order = create_parent_order(app.nextorderId, "SELL", mid_price, number_of_options, False)  # type: ignore[arg-type]
-    # app.placeOrder(app.nextorderId, contract, order)
+    # define option contract and request data for it.
+    contract = get_options_contract(ticker=stock_ticker, contract_strike=min_value, expiry_date=expiry_date, right="C")
+    request_market_data_option(appl, contract)
+
+    # compute the mid-point for the option price (ask+bid)/2.
+    mid_price = np.round(np.mean(appl.stock_current_price_dict[appl.nextorderId].price), 2)
+    appl.nextorderId += 1  # type: ignore
+
+    # create order and fire it
+    order = create_parent_order(appl.nextorderId,
+                                "SELL",
+                                mid_price,
+                                config_vars["number_of_options"],
+                                False)  # type: ignore[arg-type]
+    place_option_order(appl, contract, order)
 
     return appl
 
 
 if __name__ == '__main__':
     app = main()
+    app.disconnect()
