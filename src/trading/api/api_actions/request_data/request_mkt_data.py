@@ -23,4 +23,4 @@ def request_market_data_option(app: IBapi, contract: Contract) -> None:
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
 
     while app.nextorderId not in app.stock_current_price_dict:
-        time.sleep(1.0)
+        time.sleep(0.2)

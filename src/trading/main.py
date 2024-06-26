@@ -8,7 +8,7 @@ import numpy as np
 from dotenv import dotenv_values
 from loguru import logger
 
-from trading.api.api_actions.place_orders.place_option_orders import place_option_order
+from trading.api.api_actions.place_orders.place_option_orders import place_option_order, wait_until_order_is_filled
 from trading.api.api_actions.request_data.request_mkt_data import request_market_data_option
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.ibapi_class import IBapi
@@ -69,6 +69,11 @@ def main() -> IBapi:
                                 config_vars["number_of_options"],
                                 False)  # type: ignore[arg-type]
     place_option_order(appl, contract, order)
+
+    # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
+    wait_until_order_is_filled(appl)
+
+    # TODO: Proceed to stocks orders (2 conditional orders, one parent and one child)
 
     return appl
 
