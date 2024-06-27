@@ -8,9 +8,12 @@ import numpy as np
 from dotenv import dotenv_values
 from loguru import logger
 
-from trading.api.api_actions.place_orders.place_option_orders import place_option_order, wait_until_order_is_filled
-from trading.api.api_actions.request_data.request_mkt_data import request_market_data_option
+from trading.api.api_actions.place_orders.place_option_orders import place_option_order
+from trading.api.api_actions.place_orders.place_stock_orders import place_simple_order
+from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
+from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.contracts.option_contracts import get_options_contract
+from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 from trading.api.orders.option_orders import create_parent_order
 from trading.core.strategy.get_strike_and_stock import get_strike_and_stock
@@ -56,13 +59,13 @@ def main() -> IBapi:
 
     # define option contract and request data for it.
     contract = get_options_contract(ticker=stock_ticker, contract_strike=min_value, expiry_date=expiry_date, right="C")
-    request_market_data_option(appl, contract)
+    get_contract_details(appl, contract)
 
     # compute the mid-point for the option price (ask+bid)/2.
     mid_price = np.round(np.mean(appl.stock_current_price_dict[appl.nextorderId].price), 2)
     appl.nextorderId += 1  # type: ignore
 
-    # create order and fire it
+    # create an option sell order and fire it
     order = create_parent_order(appl.nextorderId,
                                 "SELL",
                                 mid_price,
@@ -74,6 +77,16 @@ def main() -> IBapi:
     wait_until_order_is_filled(appl)
 
     # TODO: Proceed to stocks orders (2 conditional orders, one parent and one child)
+    # get the stock contract for the above ticker
+    stock_contract = get_stock_contract(ticker=stock_ticker)
+    # here I need to get the stock price
+    place_simple_order(appl, stock_ticker, "BUY", 100 , config_vars["number_of_options"]*100)
+    # buy the shares
+
+
+    get_contract_details(app, stock_contract)
+    app.options_strike_price_dict[app.nextorderId]
+    app.nextorderId += 1  # type: ignore
 
     return appl
 

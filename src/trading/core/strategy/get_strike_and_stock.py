@@ -4,6 +4,7 @@ import numpy as np
 from loguru import logger
 
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
+from trading.api.api_actions.request_data.request_mkt_data import request_market_data
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
@@ -40,18 +41,13 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
         # define the stock contract
         stock_contract = get_stock_contract(stock_ticker)
         # request the stock contract information
-        app.reqMktData(app.nextorderId, stock_contract, '', True, False, [])
-        condition = True
-        while condition:
-            try:
-                price_list = app.stock_current_price_dict[app.nextorderId].price
-                # compute the mid-point between current bid and ask
-                if len(price_list) == 2:
-                    mid_price = np.mean(np.array(price_list)[:2])
-                    dict_stock_price[stock_ticker] = mid_price
-                    condition = False
-            except (IndexError, ValueError, KeyError, TypeError):
-                condition = True
+        request_market_data(app, stock_contract)
+
+        price_list = app.stock_current_price_dict[app.nextorderId].price
+        # compute the mid-point between current bid and ask
+        mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
+        dict_stock_price[stock_ticker] = mid_price
+
         app.nextorderId += 1  # type: ignore
 
         closest_strike_price = compute_closest_percentage(dict_options_strike_price[stock_ticker],

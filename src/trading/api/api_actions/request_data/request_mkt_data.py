@@ -18,8 +18,8 @@ def request_market_data_stock(app: IBapi, ticker_symbol: str) -> None:
     check_price_is_live_and_is_float(app, app.nextorderId)
 
 
-def request_market_data_option(app: IBapi, contract: Contract) -> None:
-    """Request live point (ie. not streaming: snapshot=True) market data for options."""
+def request_market_data(app: IBapi, contract: Contract) -> None:
+    """Request live point (i.e. not streaming: snapshot=True) market data for options or stocks."""
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
 
     while app.nextorderId not in app.stock_current_price_dict:

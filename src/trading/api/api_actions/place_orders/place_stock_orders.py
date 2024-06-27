@@ -17,9 +17,9 @@ def place_simple_order(app: IBapi, ticker_symbol: str, action: str, price: float
     contract = get_stock_contract(ticker_symbol)
 
     if action == "BUY":
-        price += 0.01
+        price += config_vars["buffer_allowed_pennies"]
     elif action == "SELL":
-        price -= 0.01
+        price -= config_vars["buffer_allowed_pennies"]
     else:
         raise ValueError(f"Valid actions are [BUY, SELL], got {action}.")
 
@@ -29,7 +29,7 @@ def place_simple_order(app: IBapi, ticker_symbol: str, action: str, price: float
                                 quantity)
     order.transmit = True
     app.placeOrder(app.nextorderId, contract, order)
-    app.reqIds(-1)  # increment the next valid id (appl.nextorderId)
+    app.nextorderId += 1  # type: ignore
 
 
 def place_profit_taker_order(app: IBapi, ticker_symbol: str, price: float, quantity: int) -> None:
@@ -39,14 +39,14 @@ def place_profit_taker_order(app: IBapi, ticker_symbol: str, price: float, quant
     quantity: int (number of shares)
     """
     contract = get_stock_contract(ticker_symbol)
-    buy_price = round(price+0.01, 2)
+    buy_price = round(price+config_vars["buffer_allowed_pennies"], 2)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "BUY",
                                        buy_price,
                                        quantity)
     parent_order.transmit = False
     # remove a cent as a buffer for order to trigger
-    price_profit_taker = round(price*(1+config_vars["percentage_profit_taking"]/100)-0.01, 2)
+    price_profit_taker = round(price*(1+config_vars["percentage_profit_taking"]/100)-config_vars["buffer_allowed_pennies"], 2)
     profit_taker_child_order = create_profit_taker_child_order(app.nextorderId,  # type: ignore
                                                                app.nextorderId+1,  # type: ignore
                                                                price_profit_taker, quantity)
@@ -56,4 +56,4 @@ def place_profit_taker_order(app: IBapi, ticker_symbol: str, price: float, quant
 
     app.placeOrder(parent_order.orderId, contract, parent_order)
     app.placeOrder(profit_taker_child_order.orderId, contract, profit_taker_child_order)
-    app.reqIds(-1)  # increment the next valid id (appl.nextorderId)
+    app.nextorderId += 1  # type: ignore
