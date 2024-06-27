@@ -1,12 +1,9 @@
 stocks:
-  TSLA:
-    stock: 1
-  RKLB:
-    reqid: 2
-  NVDA:
-    reqid: 3
-  AAPL:
-    reqid: 4
+  - TSLA
+  - NVDA
+  - AMD
+  - ARM
 
+number_of_options: 1
 
-percentage_profit_taking: 1.0
+percentage_profit_taking: 1
