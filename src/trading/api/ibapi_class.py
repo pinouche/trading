@@ -31,10 +31,10 @@ class IBapi(EWrapper, EClient):
         # next valid order
         self.nextorderId: int | None = None
 
-        self.dic_orderid_to_ticker: dict = {}
-
-        # contract details for options
+        # contract details for options and stocks
         self.options_strike_price_dict: dict = {}
+        self.stocks_strike_price_dict: dict = {}
+
         # data structure to hold current price requests
         self.stock_current_price_dict: dict = {}
 
@@ -47,10 +47,16 @@ class IBapi(EWrapper, EClient):
         """Callback function to receive contract details for option (OPT) type contracts."""
         contract = contractDetails.contract
 
+        # we use a different dict to store options and stocks data
         if contract.secType == "OPT":
             if contract.symbol not in self.options_strike_price_dict.keys():
                 self.options_strike_price_dict[contract.symbol] = []
             self.options_strike_price_dict[contract.symbol].append(contract.strike)
+
+        elif contract.secType == "STK":
+            if reqId not in self.stocks_strike_price_dict.keys():
+                self.stocks_strike_price_dict[reqId] = []
+            self.stocks_strike_price_dict[reqId].append(contract)
 
     def get_open_order_status(self) -> None:
         """Trigger the orderStatus EWrapper callback function."""

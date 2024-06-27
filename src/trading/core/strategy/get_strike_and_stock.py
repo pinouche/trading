@@ -3,6 +3,7 @@
 import numpy as np
 from loguru import logger
 
+from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
@@ -32,15 +33,8 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
         # define option contract
         option_contract = get_options_contract(ticker=stock_ticker, expiry_date=expiry_date)
         # request option contract info
-        app.reqContractDetails(app.nextorderId, option_contract)
-        # store the information
-        condition = True
-        while condition:
-            try:
-                condition = False
-                dict_options_strike_price[stock_ticker] = app.options_strike_price_dict[stock_ticker]
-            except KeyError:
-                condition = True
+        get_contract_details(app, option_contract)
+        dict_options_strike_price[stock_ticker] = app.options_strike_price_dict[stock_ticker]
         app.nextorderId += 1  # type: ignore
 
         # define the stock contract
