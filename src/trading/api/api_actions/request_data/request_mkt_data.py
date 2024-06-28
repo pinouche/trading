@@ -24,4 +24,9 @@ def request_market_data(app: IBapi, contract: Contract) -> None:
 
     # this is the same data structure if it's a stock or option contract request
     while app.nextorderId not in app.stock_current_price_dict:
-        time.sleep(0.2)
+        time.sleep(0.1)
+
+    while True:
+        if app.stock_current_price_dict[app.nextorderId]:
+            break
+        time.sleep(0.1)

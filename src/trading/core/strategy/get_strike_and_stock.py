@@ -48,12 +48,11 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
         mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
         dict_stock_price[stock_ticker] = mid_price
 
-        app.nextorderId += 1  # type: ignore
-
         closest_strike_price = compute_closest_percentage(dict_options_strike_price[stock_ticker],
                                                           dict_stock_price[stock_ticker])
         logger.info(f"Closest price for stock: {stock_ticker}, strike price: {closest_strike_price}, "
                     f"stock price: {dict_stock_price[stock_ticker]}")
+        logger.info(f"current redId is {app.nextorderId}.")
         dict_result[stock_ticker] = closest_strike_price
 
     stock_ticker = min(dict_result, key=dict_result.get)  # type: ignore
