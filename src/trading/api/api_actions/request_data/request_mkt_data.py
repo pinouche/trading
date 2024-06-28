@@ -22,5 +22,6 @@ def request_market_data(app: IBapi, contract: Contract) -> None:
     """Request live point (i.e. not streaming: snapshot=True) market data for options or stocks."""
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
 
+    # this is the same data structure if it's a stock or option contract request
     while app.nextorderId not in app.stock_current_price_dict:
         time.sleep(0.2)

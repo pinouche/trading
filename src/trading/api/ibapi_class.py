@@ -32,6 +32,10 @@ class IBapi(EWrapper, EClient):
         self.nextorderId: int | None = None
 
         # contract details for options and stocks
+        self.options_price_dict: dict = {}
+        self.stocks_price_dict: dict = {}
+
+        # contract details for options and stocks
         self.options_strike_price_dict: dict = {}
         self.stocks_strike_price_dict: dict = {}
 
