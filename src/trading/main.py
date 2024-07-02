@@ -9,7 +9,7 @@ from dotenv import dotenv_values
 from loguru import logger
 
 from trading.api.api_actions.place_orders.place_option_orders import place_option_order
-from trading.api.api_actions.place_orders.place_stock_orders import place_simple_order
+from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.api_actions.request_data.request_mkt_data import request_market_data
@@ -55,12 +55,12 @@ def main() -> IBapi:
         # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
         expiry_date = get_next_friday()
 
-    stock_ticker, min_value = get_strike_and_stock(appl, stock_list, expiry_date)
+    stock_ticker, strike_price = get_strike_and_stock(appl, stock_list, expiry_date)
     appl.nextorderId += 1  # type: ignore
-    logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {min_value}.")
+    logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")
 
     # define option contract and request data for it.
-    contract = get_options_contract(ticker=stock_ticker, contract_strike=min_value, expiry_date=expiry_date, right="C")
+    contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
     get_contract_details(appl, contract)
     request_market_data(appl, contract)
 
@@ -91,16 +91,10 @@ def main() -> IBapi:
     mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
 
     # place order to buy the stock
-    place_simple_order(appl, stock_ticker, "BUY", mid_price, config_vars["number_of_options"]*100)
+    place_simple_order(appl, stock_contract, "BUY", mid_price, config_vars["number_of_options"]*100)
 
-
-
-    # TODO: Proceed to stocks orders (2 conditional orders, one parent and one child)
-
-    #
-    get_contract_details(app, stock_contract)
-    app.options_strike_price_dict[app.nextorderId]
-    app.nextorderId += 1  # type: ignore
+    # place a parent sell order if condition is reached with an attached child buy conditional order.
+    place_conditional_parent_child_orders(appl, stock_contract, strike_price)
 
     return appl
 

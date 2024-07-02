@@ -1,48 +1,16 @@
 """Create conditions for conditional orders"""
 
-from ibapi.order_condition import (
-    Create,
-    ExecutionCondition,
-    MarginCondition,
-    OrderCondition,
-    PercentChangeCondition,
-    PriceCondition,
-    TimeCondition,
-    VolumeCondition,
-)
+from ibapi.contract import Contract
+from ibapi.order_condition import Create, OrderCondition, PriceCondition
 
 
-def create_price_condition() -> PriceCondition:
-    """Create condition."""
-    price_condition = Create(OrderCondition.Price)
-    return price_condition
+def create_price_condition(contract: Contract, isMore: bool, price_condition: float) -> PriceCondition:
+    """Create price condition."""
+    condition = Create(OrderCondition.Price)
+    condition.conId = contract.conId
+    condition.exchange = contract.exchange
+    condition.isMore = isMore  # if True, the order is triggered when the price goes above our condition.price
+    condition.triggerMethod = condition.TriggerMethodEnum.Last
+    condition.price = price_condition
 
-
-def create_volume_condition() -> VolumeCondition:
-    """Create condition."""
-    volume_condition = Create(OrderCondition.Volume)
-    return volume_condition
-
-
-def create_time_condition() -> TimeCondition:
-    """Create condition."""
-    time_condition = Create(OrderCondition.Time)
-    return time_condition
-
-
-def create_percentchange_condition() -> PercentChangeCondition:
-    """Create condition."""
-    percentchange_condition = Create(OrderCondition.PercentChange)
-    return percentchange_condition
-
-
-def create_margin_condition() -> MarginCondition:
-    """Create condition."""
-    margin_condition = Create(OrderCondition.Margin)
-    return margin_condition
-
-
-def create_execution_condition() -> ExecutionCondition:
-    """Create condition."""
-    execution_condition = Create(OrderCondition.Execution)
-    return execution_condition
+    return condition
