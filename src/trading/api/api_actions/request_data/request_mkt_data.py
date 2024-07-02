@@ -30,3 +30,8 @@ def request_market_data(app: IBapi, contract: Contract) -> None:
         if app.stock_current_price_dict[app.nextorderId]:
             break
         time.sleep(0.1)
+
+    while True:
+        if app.stock_current_price_dict[app.nextorderId].price:
+            break
+        time.sleep(0.1)

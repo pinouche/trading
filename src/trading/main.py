@@ -89,7 +89,11 @@ def main() -> IBapi:
     request_market_data(app, stock_contract)
     price_list = app.stock_current_price_dict[app.nextorderId].price
     mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
+
+    # place order to buy the stock
     place_simple_order(appl, stock_ticker, "BUY", mid_price, config_vars["number_of_options"]*100)
+
+
 
     # TODO: Proceed to stocks orders (2 conditional orders, one parent and one child)
 
