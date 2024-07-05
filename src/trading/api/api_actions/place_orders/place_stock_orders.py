@@ -74,6 +74,9 @@ def place_conditional_parent_child_orders(app: IBapi, contract: Contract, price:
     This is part of implementing the itm dynamic hedging strategy.
     """
     # create a sell order for stocks if price condition is met (price reaches the strike price)
+
+    #TODO: the contract object here should come from self.stocks_strike_price_dict[reqId].append(contract)!
+
     parent_price_condition = create_price_condition(contract, False, price)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "SELL",
@@ -81,23 +84,19 @@ def place_conditional_parent_child_orders(app: IBapi, contract: Contract, price:
                                        config_vars["number_of_options"] * 100,
                                        False)
     parent_order.conditions.append(parent_price_condition)
-    parent_order.transmit = False
-
-    print("HERE 2")
+    parent_order.transmit = True
 
     # create a buy order for stocks if price condition is met (price reaches the strike price)
-    child_price_condition = create_price_condition(contract, True, price)
-    child_order = create_child_order(app.nextorderId,  # type: ignore
-                                     app.nextorderId + 1,  # type: ignore
-                                     "BUY",
-                                     round(price + config_vars["buffer_allowed_pennies"], 2),
-                                     config_vars["number_of_options"] * 100,
-                                     False)
-    child_order.conditions.append(child_price_condition)
-    child_order.transmit = True
+    # child_price_condition = create_price_condition(contract, True, price)
+    # child_order = create_child_order(app.nextorderId,  # type: ignore
+    #                                  app.nextorderId + 1,  # type: ignore
+    #                                  "BUY",
+    #                                  round(price + config_vars["buffer_allowed_pennies"], 2),
+    #                                  config_vars["number_of_options"] * 100,
+    #                                  False)
+    # child_order.conditions.append(child_price_condition)
+    # child_order.transmit = True
 
-    print("HERE 3")
-
-    app.placeOrder(parent_order.orderId, contract, parent_order)
-    app.placeOrder(child_order.orderId, contract, child_order)
+    app.placeOrder(app.nextorderId, contract, parent_order)
+    # app.placeOrder(child_order.orderId, contract, child_order)
     app.nextorderId += 1  # type: ignore

@@ -8,7 +8,7 @@ import numpy as np
 from dotenv import dotenv_values
 from loguru import logger
 
-from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders
+from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.api_actions.request_data.request_mkt_data import request_market_data
 from trading.api.contracts.option_contracts import get_options_contract
@@ -89,7 +89,7 @@ def main() -> IBapi:
     mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
 
     # place order to buy the stock
-    # place_simple_order(appl, stock_contract, "BUY", mid_price, config_vars["number_of_options"]*100)
+    place_simple_order(appl, stock_contract, "BUY", mid_price, config_vars["number_of_options"]*100)
 
     logger.info("We are here now!")
 

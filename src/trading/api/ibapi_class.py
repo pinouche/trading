@@ -62,27 +62,28 @@ class IBapi(EWrapper, EClient):
                 self.stocks_strike_price_dict[reqId] = []
             self.stocks_strike_price_dict[reqId].append(contract)
 
-    def get_open_order_status(self) -> None:
-        """Trigger the orderStatus EWrapper callback function."""
-        self.order_status = {}  # reset the dictionary
-        self.reqOpenOrders()
+    # def get_open_order_status(self) -> None:
+    #     """Trigger the orderStatus EWrapper callback function."""
+    #     self.order_status = {}  # reset the dictionary
+    #     self.reqOpenOrders()
 
     def openOrder(self, orderId: int, contract: Contract, order: Order, orderState: OrderState) -> None:
         """Overwrite Ewrapper openOrder callback function."""
-        print('openOrder id:', orderId, contract.symbol, contract.secType, '@', contract.exchange, ':', order.action,
-              order.orderType, order.totalQuantity, orderState.status)
+        logger.info(f'''openOrder id:, {orderId}, {contract.symbol}, {contract.secType}, @, {contract.exchange}, ':',
+                    {order.action}, {order.orderType}, {order.totalQuantity}, {orderState.status}.''')
 
     def execDetails(self, reqId: int, contract: Contract, execution: Execution) -> None:
         """Overwrite Ewrapper execDetails callback function."""
-        print('Order Executed: ', reqId, contract.symbol, contract.secType, contract.currency, execution.execId,
-              execution.orderId, execution.shares, execution.lastLiquidity)
+        logger.info(f'''Order Executed: {reqId}, {contract.symbol}, {contract.secType}, {contract.currency}, {execution.execId},
+        {execution.orderId}, {execution.shares}, {execution.lastLiquidity}.''')
         self.execution_details[execution.orderId] = {"contract": contract, "execution": execution}
 
     def orderStatus(self, orderId: int, status: str, filled: Decimal, remaining: Decimal, avgFullPrice: float,
-                    permId: int, parentId: int, lastFillPrice: float, clientId: int, whyHeld: str, mktCapPrice: float) -> None:
+                    permId: int, parentId: int, lastFillPrice: float, clientId: int, whyHeld: str,
+                    mktCapPrice: float) -> None:
         """Overwrite Ewrapper orderStatus callback function."""
-        print('orderStatus - orderid:', orderId, 'status:', status, 'filled', filled, 'remaining', remaining,
-              'lastFillPrice', lastFillPrice)
+        logger.info(f'''orderStatus - orderid: {orderId}, status:, {status}, filled, {filled}, remaining, {remaining},
+                    lastFillPrice, {lastFillPrice}''')
         self.order_status[orderId] = {"status": status, "filled": filled, "remaining": remaining}
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
@@ -108,7 +109,6 @@ class IBapi(EWrapper, EClient):
         if reqId not in self.stock_current_price_dict.keys():
             self.stock_current_price_dict[reqId] = StockInfo()
         if marketDataType == 1:
-
             # Append the new price to the list
             self.stock_current_price_dict[reqId].market_is_live = True
 
