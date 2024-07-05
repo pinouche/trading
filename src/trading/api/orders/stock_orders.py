@@ -3,7 +3,7 @@
 from ibapi.order import Order
 
 
-def create_parent_order(order_id: int, action: str, price: float, quantity: int) -> Order:
+def create_parent_order(order_id: int, action: str, price: float, quantity: int, all_or_none: bool = True) -> Order:
     """Implements stock order.
     action: str (SELL OR BUY)
     price: float (price for the limit order)
@@ -16,14 +16,14 @@ def create_parent_order(order_id: int, action: str, price: float, quantity: int)
     order.totalQuantity = quantity
     order.orderType = 'LMT'
     order.lmtPrice = price
-    order.allOrNone = True
+    order.allOrNone = all_or_none
     order.outsideRth = True
 
     return order
 
 
 def create_child_order(parent_order_id: int, child_order_id: int,
-                       action: str, price: float, quantity: int) -> Order:
+                       action: str, price: float, quantity: int, all_or_none: bool = True) -> Order:
     """Implements stock order.
     price: float (price for the limit order)
     quantity: int (number of shares)
@@ -36,7 +36,7 @@ def create_child_order(parent_order_id: int, child_order_id: int,
     order.totalQuantity = quantity
     order.orderType = 'LMT'
     order.lmtPrice = price
-    order.allOrNone = True
+    order.allOrNone = all_or_none
     order.outsideRth = True
 
     return order

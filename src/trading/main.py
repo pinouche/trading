@@ -8,9 +8,7 @@ import numpy as np
 from dotenv import dotenv_values
 from loguru import logger
 
-from trading.api.api_actions.place_orders.place_option_orders import place_option_order
-from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
-from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
+from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.api_actions.request_data.request_mkt_data import request_market_data
 from trading.api.contracts.option_contracts import get_options_contract
@@ -71,27 +69,29 @@ def main() -> IBapi:
     logger.info(f"the mid price is {mid_price}")
 
     # create an option sell order and fire it
-    order = create_parent_order(appl.nextorderId,
+    create_parent_order(appl.nextorderId,
                                 "SELL",
                                 mid_price,
                                 config_vars["number_of_options"],
                                 False)  # type: ignore[arg-type]
-    place_option_order(appl, contract, order)
-
-    # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
-    wait_until_order_is_filled(appl)
+    # place_option_order(appl, contract, order)
+    #
+    # # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
+    # wait_until_order_is_filled(appl)
 
     logger.info("It does not wait to see whether or not it is finished!!")
 
     # get the stock contract for the above ticker
     stock_contract = get_stock_contract(ticker=stock_ticker)
     # Get the current stock price
-    request_market_data(app, stock_contract)
-    price_list = app.stock_current_price_dict[app.nextorderId].price
+    request_market_data(appl, stock_contract)
+    price_list = appl.stock_current_price_dict[appl.nextorderId].price
     mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
 
     # place order to buy the stock
-    place_simple_order(appl, stock_contract, "BUY", mid_price, config_vars["number_of_options"]*100)
+    # place_simple_order(appl, stock_contract, "BUY", mid_price, config_vars["number_of_options"]*100)
+
+    logger.info("We are here now!")
 
     # place a parent sell order if condition is reached with an attached child buy conditional order.
     place_conditional_parent_child_orders(appl, stock_contract, strike_price)

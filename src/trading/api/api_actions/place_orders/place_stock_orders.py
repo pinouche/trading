@@ -44,19 +44,22 @@ def place_profit_taker_order(app: IBapi, contract: Contract, price: float, quant
     price: float (price for the limit order)
     quantity: int (number of shares)
     """
-    buy_price = round(price+config_vars["buffer_allowed_pennies"], 2)
+    buy_price = round(price + config_vars["buffer_allowed_pennies"], 2)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "BUY",
                                        buy_price,
-                                       quantity)
+                                       quantity,
+                                       False)
     parent_order.transmit = False
     # remove a cent as a buffer for order to trigger
-    price_profit_taker = round(price*(1+config_vars["percentage_profit_taking"]/100)-config_vars["buffer_allowed_pennies"], 2)
+    price_profit_taker = round(
+        price * (1 + config_vars["percentage_profit_taking"] / 100) - config_vars["buffer_allowed_pennies"], 2)
     profit_taker_child_order = create_child_order(app.nextorderId,  # type: ignore
-                                                  app.nextorderId+1,  # type: ignore
+                                                  app.nextorderId + 1,  # type: ignore
                                                   "SELL",
                                                   price_profit_taker,
-                                                  quantity)
+                                                  quantity,
+                                                  False)
     profit_taker_child_order.transmit = True
 
     assert buy_price < price_profit_taker, f"Selling price {price_profit_taker} is below purchase price {buy_price}."
@@ -74,19 +77,26 @@ def place_conditional_parent_child_orders(app: IBapi, contract: Contract, price:
     parent_price_condition = create_price_condition(contract, False, price)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "SELL",
-                                       round(price-config_vars["buffer_allowed_pennies"], 2),
-                                       config_vars["number_of_options"] * 100)
-    parent_order.transmit = False
+                                       round(price - config_vars["buffer_allowed_pennies"], 2),
+                                       config_vars["number_of_options"] * 100,
+                                       False)
     parent_order.conditions.append(parent_price_condition)
+    parent_order.transmit = False
+
+    print("HERE 2")
 
     # create a buy order for stocks if price condition is met (price reaches the strike price)
     child_price_condition = create_price_condition(contract, True, price)
-    child_order = create_parent_order(app.nextorderId,  # type: ignore
-                                      "BUY",
-                                      round(price+config_vars["buffer_allowed_pennies"], 2),
-                                      config_vars["number_of_options"] * 100)
+    child_order = create_child_order(app.nextorderId,  # type: ignore
+                                     app.nextorderId + 1,  # type: ignore
+                                     "BUY",
+                                     round(price + config_vars["buffer_allowed_pennies"], 2),
+                                     config_vars["number_of_options"] * 100,
+                                     False)
     child_order.conditions.append(child_price_condition)
     child_order.transmit = True
+
+    print("HERE 3")
 
     app.placeOrder(parent_order.orderId, contract, parent_order)
     app.placeOrder(child_order.orderId, contract, child_order)
