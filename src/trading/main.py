@@ -77,7 +77,6 @@ def main() -> IBapi:
                                 config_vars["number_of_options"],
                                 False)  # type: ignore[arg-type]
     place_option_order(appl, contract, order)
-
     # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
     wait_until_order_is_filled(appl)
 
@@ -91,6 +90,7 @@ def main() -> IBapi:
 
     # place order to buy the stock
     place_simple_order(appl, stock_contract, "BUY", mid_price, config_vars["number_of_options"]*100)
+    wait_until_order_is_filled(appl)
 
     logger.info("We are here now!")
 
