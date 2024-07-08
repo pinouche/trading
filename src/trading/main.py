@@ -93,7 +93,7 @@ def main() -> IBapi:
     logger.info("We are here now!")
 
     # place a parent sell order if condition is reached with an attached child buy conditional order.
-    place_conditional_parent_child_orders(appl, stock_contract, strike_price)
+    place_conditional_parent_child_orders(appl, stock_contract, strike_price, mid_price)
 
     return appl
 

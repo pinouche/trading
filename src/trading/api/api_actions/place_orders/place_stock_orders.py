@@ -70,33 +70,42 @@ def place_profit_taker_order(app: IBapi, contract: Contract, price: float, quant
     app.nextorderId += 1  # type: ignore
 
 
-def place_conditional_parent_child_orders(app: IBapi, contract: Contract, price: float) -> None:
+def place_conditional_parent_child_orders(app: IBapi,
+                                          contract: Contract,
+                                          strike_price: float,
+                                          purchase_price: float) -> None:
     """Place a parent conditional buy order based on price and an attached conditional child order, also based on price.
     This is part of implementing the itm dynamic hedging strategy.
+
+    Args:
+        - app: IBapi object class
+        - contract: stock contract type
+        - strike_price: strike price of the underlying option
+        - purchase_price: stock price of the shares bought
     """
     # create a sell order for stocks if price condition is met (price reaches the strike price)
 
-    get_contract_details(app, contract)  # request contract details
-    parent_price_condition = create_price_condition(contract, False, price)
+    contract_details = get_contract_details(app, contract)[-1]  # request contract details: returns a list of contract object
+    parent_price_condition = create_price_condition(contract_details, False, strike_price)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "SELL",
-                                       round(price - config_vars["buffer_allowed_pennies"], 2),
+                                       round(strike_price - config_vars["buffer_allowed_pennies"], 2),
                                        config_vars["number_of_options"] * 100,
                                        False)
     parent_order.conditions.append(parent_price_condition)
-    parent_order.transmit = True
+    parent_order.transmit = False
 
     # create a buy order for stocks if price condition is met (price reaches the strike price)
-    # child_price_condition = create_price_condition(contract, True, price)
-    # child_order = create_child_order(app.nextorderId,  # type: ignore
-    #                                  app.nextorderId + 1,  # type: ignore
-    #                                  "BUY",
-    #                                  round(price + config_vars["buffer_allowed_pennies"], 2),
-    #                                  config_vars["number_of_options"] * 100,
-    #                                  False)
-    # child_order.conditions.append(child_price_condition)
-    # child_order.transmit = True
+    child_price_condition = create_price_condition(contract_details, True, purchase_price)
+    child_order = create_child_order(app.nextorderId,  # type: ignore
+                                     app.nextorderId + 1,  # type: ignore
+                                     "BUY",
+                                     round(purchase_price + config_vars["buffer_allowed_pennies"], 2),
+                                     config_vars["number_of_options"] * 100,
+                                     False)
+    child_order.conditions.append(child_price_condition)
+    child_order.transmit = True
 
     app.placeOrder(app.nextorderId, contract, parent_order)
-    # app.placeOrder(child_order.orderId, contract, child_order)
+    app.placeOrder(child_order.orderId, contract, child_order)
     app.nextorderId += 1  # type: ignore
