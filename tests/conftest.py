@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 from dotenv import dotenv_values
 from loguru import logger
+from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.ibapi_class import IBapi
 from trading.utils import get_next_friday
@@ -52,7 +53,6 @@ def options_strikes(app: IBapi) -> list[float] | Any:
     ticker_symbol = "TSLA"
     date = get_next_friday()
     option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
-    app.reqContractDetails(app.nextorderId, option_contract)
-    while ticker_symbol not in app.options_strike_price_dict:
-        time.sleep(1.0)
-    return app.options_strike_price_dict[ticker_symbol]
+    contract_details = get_contract_details(app, option_contract)
+
+    return contract_details

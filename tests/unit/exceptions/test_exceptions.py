@@ -20,9 +20,9 @@ def test_check_price_is_live_and_is_float(app: IBapi,
                                           reqid: int,
                                           expected_error: PriceNotLiveError | PriceNotFloatError | None) -> None:
 
-    app.stock_current_price_dict[reqid] = StockInfo()
-    app.stock_current_price_dict[reqid].price = price
-    app.stock_current_price_dict[reqid].market_is_live = market_is_live
+    app.current_asset_price_dict[reqid] = StockInfo()
+    app.current_asset_price_dict[reqid].price = price
+    app.current_asset_price_dict[reqid].market_is_live = market_is_live
 
     if expected_error is None:
         print(expected_error)

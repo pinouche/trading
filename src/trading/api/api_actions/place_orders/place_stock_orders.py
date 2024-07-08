@@ -1,25 +1,28 @@
 """Place (submit) various order types to the TWS API"""
 
-from trading.api.contracts.stock_contracts import get_stock_contract
+from ibapi.contract import Contract
+from ibapi.order_condition import PriceCondition
+
+from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.ibapi_class import IBapi
-from trading.api.orders.stock_orders import create_parent_order, create_profit_taker_child_order
+from trading.api.orders.conditions import create_price_condition
+from trading.api.orders.stock_orders import create_child_order, create_parent_order
 from trading.utils import config_load
 
 config_vars = config_load("./config.yaml")
 
 
-def place_simple_order(app: IBapi, ticker_symbol: str, action: str, price: float, quantity: int) -> None:
+def place_simple_order(app: IBapi, contract: Contract, action: str, price: float, quantity: int,
+                       price_condition: PriceCondition = None) -> None:
     """Place a limit order.
     action: str (SELL OR BUY)
     price: float (price for the limit order)
     quantity: int (number of shares)
     """
-    contract = get_stock_contract(ticker_symbol)
-
     if action == "BUY":
-        price += 0.01
+        price += config_vars["buffer_allowed_pennies"]
     elif action == "SELL":
-        price -= 0.01
+        price -= config_vars["buffer_allowed_pennies"]
     else:
         raise ValueError(f"Valid actions are [BUY, SELL], got {action}.")
 
@@ -27,33 +30,82 @@ def place_simple_order(app: IBapi, ticker_symbol: str, action: str, price: float
                                 action,
                                 round(price, 2),
                                 quantity)
+
+    if price_condition is not None:
+        order.conditions.append(price_condition)
+
     order.transmit = True
     app.placeOrder(app.nextorderId, contract, order)
-    app.reqIds(-1)  # increment the next valid id (appl.nextorderId)
+    app.nextorderId += 1  # type: ignore
 
 
-def place_profit_taker_order(app: IBapi, ticker_symbol: str, price: float, quantity: int) -> None:
+def place_profit_taker_order(app: IBapi, contract: Contract, price: float, quantity: int) -> None:
     """Place a limit order.
     action: str (SELL OR BUY)
     price: float (price for the limit order)
     quantity: int (number of shares)
     """
-    contract = get_stock_contract(ticker_symbol)
-    buy_price = round(price+0.01, 2)
+    buy_price = round(price + config_vars["buffer_allowed_pennies"], 2)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "BUY",
                                        buy_price,
-                                       quantity)
+                                       quantity,
+                                       False)
     parent_order.transmit = False
     # remove a cent as a buffer for order to trigger
-    price_profit_taker = round(price*(1+config_vars["percentage_profit_taking"]/100)-0.01, 2)
-    profit_taker_child_order = create_profit_taker_child_order(app.nextorderId,  # type: ignore
-                                                               app.nextorderId+1,  # type: ignore
-                                                               price_profit_taker, quantity)
+    price_profit_taker = round(
+        price * (1 + config_vars["percentage_profit_taking"] / 100) - config_vars["buffer_allowed_pennies"], 2)
+    profit_taker_child_order = create_child_order(app.nextorderId,  # type: ignore
+                                                  app.nextorderId + 1,  # type: ignore
+                                                  "SELL",
+                                                  price_profit_taker,
+                                                  quantity,
+                                                  False)
     profit_taker_child_order.transmit = True
 
     assert buy_price < price_profit_taker, f"Selling price {price_profit_taker} is below purchase price {buy_price}."
 
     app.placeOrder(parent_order.orderId, contract, parent_order)
     app.placeOrder(profit_taker_child_order.orderId, contract, profit_taker_child_order)
-    app.reqIds(-1)  # increment the next valid id (appl.nextorderId)
+    app.nextorderId += 1  # type: ignore
+
+
+def place_conditional_parent_child_orders(app: IBapi,
+                                          contract: Contract,
+                                          strike_price: float,
+                                          purchase_price: float) -> None:
+    """Place a parent conditional buy order based on price and an attached conditional child order, also based on price.
+    This is part of implementing the itm dynamic hedging strategy.
+
+    Args:
+        - app: IBapi object class
+        - contract: stock contract type
+        - strike_price: strike price of the underlying option
+        - purchase_price: stock price of the shares bought
+    """
+    # create a sell order for stocks if price condition is met (price reaches the strike price)
+
+    contract_details = get_contract_details(app, contract)[-1]  # request contract details: returns a list of contract object
+    parent_price_condition = create_price_condition(contract_details, False, strike_price)
+    parent_order = create_parent_order(app.nextorderId,  # type: ignore
+                                       "SELL",
+                                       round(strike_price - config_vars["buffer_allowed_pennies"], 2),
+                                       config_vars["number_of_options"] * 100,
+                                       False)
+    parent_order.conditions.append(parent_price_condition)
+    parent_order.transmit = False
+
+    # create a buy order for stocks if price condition is met (price reaches the strike price)
+    child_price_condition = create_price_condition(contract_details, True, purchase_price)
+    child_order = create_child_order(app.nextorderId,  # type: ignore
+                                     app.nextorderId + 1,  # type: ignore
+                                     "BUY",
+                                     round(purchase_price + config_vars["buffer_allowed_pennies"], 2),
+                                     config_vars["number_of_options"] * 100,
+                                     False)
+    child_order.conditions.append(child_price_condition)
+    child_order.transmit = True
+
+    app.placeOrder(app.nextorderId, contract, parent_order)
+    app.placeOrder(child_order.orderId, contract, child_order)
+    app.nextorderId += 1  # type: ignore
