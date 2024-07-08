@@ -59,11 +59,11 @@ def main() -> IBapi:
 
     # define option contract and request data for it.
     contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
-    get_contract_details(appl, contract)
+    _ = get_contract_details(appl, contract)
     request_market_data(appl, contract)
 
     # compute the mid-point for the option price (ask+bid)/2.
-    mid_price = np.round(np.mean(appl.stock_current_price_dict[appl.nextorderId].price), 2)
+    mid_price = np.round(np.mean(appl.current_asset_price_dict[appl.nextorderId].price), 2)
     appl.nextorderId += 1  # type: ignore
 
     logger.info(f"the mid price is {mid_price}")
@@ -85,7 +85,7 @@ def main() -> IBapi:
     stock_contract = get_stock_contract(ticker=stock_ticker)
     # Get the current stock price
     request_market_data(appl, stock_contract)
-    price_list = appl.stock_current_price_dict[appl.nextorderId].price
+    price_list = appl.current_asset_price_dict[appl.nextorderId].price
     mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
 
     # place order to buy the stock

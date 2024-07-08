@@ -23,15 +23,15 @@ def request_market_data(app: IBapi, contract: Contract) -> None:
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
 
     # this is the same data structure if it's a stock or option contract request
-    while app.nextorderId not in app.stock_current_price_dict:
+    while app.nextorderId not in app.current_asset_price_dict:
         time.sleep(0.1)
 
     while True:
-        if app.stock_current_price_dict[app.nextorderId]:
+        if app.current_asset_price_dict[app.nextorderId]:
             break
         time.sleep(0.1)
 
     while True:
-        if app.stock_current_price_dict[app.nextorderId].price:
+        if app.current_asset_price_dict[app.nextorderId].price:
             break
         time.sleep(0.1)

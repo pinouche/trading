@@ -40,7 +40,7 @@ class IBapi(EWrapper, EClient):
         self.stocks_strike_price_dict: dict = {}
 
         # data structure to hold current price requests
-        self.stock_current_price_dict: dict = {}
+        self.current_asset_price_dict: dict = {}
 
     def nextValidId(self, orderId: int | None) -> None:
         """Callback function to update the next valid order id"""
@@ -50,6 +50,8 @@ class IBapi(EWrapper, EClient):
     def contractDetails(self, reqId: int, contractDetails: ContractDetails) -> None:
         """Callback function to receive contract details for option (OPT) type contracts."""
         contract = contractDetails.contract
+
+        # TODO: why are the below dict storing lists?
 
         # we use a different dict to store options and stocks data
         if contract.secType == "OPT":
@@ -61,11 +63,6 @@ class IBapi(EWrapper, EClient):
             if reqId not in self.stocks_strike_price_dict.keys():
                 self.stocks_strike_price_dict[reqId] = []
             self.stocks_strike_price_dict[reqId].append(contract)
-
-    # def get_open_order_status(self) -> None:
-    #     """Trigger the orderStatus EWrapper callback function."""
-    #     self.order_status = {}  # reset the dictionary
-    #     self.reqOpenOrders()
 
     def openOrder(self, orderId: int, contract: Contract, order: Order, orderState: OrderState) -> None:
         """Overwrite Ewrapper openOrder callback function."""
@@ -88,16 +85,16 @@ class IBapi(EWrapper, EClient):
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""
-        if reqId not in self.stock_current_price_dict.keys():
-            self.stock_current_price_dict[reqId] = StockInfo()
+        if reqId not in self.current_asset_price_dict.keys():
+            self.current_asset_price_dict[reqId] = StockInfo()
         if tickType == 1 or tickType == 2:
 
             # Initialize the price list if it is None
-            if self.stock_current_price_dict[reqId].price is None:
-                self.stock_current_price_dict[reqId].price = []
+            if self.current_asset_price_dict[reqId].price is None:
+                self.current_asset_price_dict[reqId].price = []
 
             # Append the new price to the list
-            self.stock_current_price_dict[reqId].price.append(price)
+            self.current_asset_price_dict[reqId].price.append(price)
 
             spread_side = "bid"
             if tickType == 2:
@@ -106,11 +103,11 @@ class IBapi(EWrapper, EClient):
 
     def marketDataType(self, reqId: int, marketDataType: int) -> None:
         """Ewrapper method to receive if market data is live/delayed/frozen from reqMktData()."""
-        if reqId not in self.stock_current_price_dict.keys():
-            self.stock_current_price_dict[reqId] = StockInfo()
+        if reqId not in self.current_asset_price_dict.keys():
+            self.current_asset_price_dict[reqId] = StockInfo()
         if marketDataType == 1:
             # Append the new price to the list
-            self.stock_current_price_dict[reqId].market_is_live = True
+            self.current_asset_price_dict[reqId].market_is_live = True
 
             logger.info(
                 f'Live data is: {True} for reqId {reqId}.')

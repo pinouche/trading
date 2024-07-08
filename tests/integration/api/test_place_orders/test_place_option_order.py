@@ -15,7 +15,7 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     stock_contract = get_stock_contract(ticker=ticker_symbol)
     request_market_data(app, stock_contract)
 
-    stock_price_list = app.stock_current_price_dict[app.nextorderId].price
+    stock_price_list = app.current_asset_price_dict[app.nextorderId].price
     mid_price = np.mean(stock_price_list)
     app.nextorderId += 1  # type: ignore
 
@@ -26,7 +26,7 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     option_contract = get_options_contract(ticker=ticker_symbol, contract_strike=closest_itm_strike, expiry_date=date)
     request_market_data(app, option_contract)
 
-    mid_price = np.round(np.mean(app.stock_current_price_dict[app.nextorderId].price), 2)
+    mid_price = np.round(np.mean(app.current_asset_price_dict[app.nextorderId].price), 2)
     app.nextorderId += 1  # type: ignore
 
     number_of_options = 1

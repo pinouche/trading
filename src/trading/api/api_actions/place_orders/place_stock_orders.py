@@ -3,6 +3,7 @@
 from ibapi.contract import Contract
 from ibapi.order_condition import PriceCondition
 
+from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.ibapi_class import IBapi
 from trading.api.orders.conditions import create_price_condition
 from trading.api.orders.stock_orders import create_child_order, create_parent_order
@@ -75,8 +76,7 @@ def place_conditional_parent_child_orders(app: IBapi, contract: Contract, price:
     """
     # create a sell order for stocks if price condition is met (price reaches the strike price)
 
-    #TODO: the contract object here should come from self.stocks_strike_price_dict[reqId].append(contract)!
-
+    get_contract_details(app, contract)  # request contract details
     parent_price_condition = create_price_condition(contract, False, price)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "SELL",
