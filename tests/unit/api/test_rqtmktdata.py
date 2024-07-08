@@ -14,11 +14,11 @@ def test_request_data_options_contract(app: IBapi, options_strikes: list[float])
 
     # define option contract and place order
     option_contract = get_options_contract(ticker=ticker_symbol, contract_strike=first_strike_price, expiry_date=date)
-    request_market_data(app, option_contract)
+    price_list = request_market_data(app, option_contract)
 
-    assert isinstance(app.current_asset_price_dict[app.nextorderId].price, list)
-    assert len(app.current_asset_price_dict[app.nextorderId].price) == 2
-    assert np.sum([isinstance(price, float) for price in app.current_asset_price_dict[app.nextorderId].price]) == 2
+    assert isinstance(price_list, list)
+    assert len(price_list) == 2
+    assert np.sum([isinstance(price, float) for price in price_list]) == 2
 
     app.nextorderId += 1  # type: ignore
     app.disconnect()

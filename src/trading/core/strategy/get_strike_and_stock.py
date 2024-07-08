@@ -41,9 +41,8 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
         # define the stock contract
         stock_contract = get_stock_contract(stock_ticker)
         # request the stock contract information
-        request_market_data(app, stock_contract)
+        price_list = request_market_data(app, stock_contract)
 
-        price_list = app.current_asset_price_dict[app.nextorderId].price
         # compute the mid-point between current bid and ask
         mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
         dict_stock_price[stock_ticker] = mid_price

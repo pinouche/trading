@@ -51,8 +51,6 @@ class IBapi(EWrapper, EClient):
         """Callback function to receive contract details for option (OPT) type contracts."""
         contract = contractDetails.contract
 
-        # TODO: why are the below dict storing lists?
-
         # we use a different dict to store options and stocks data
         if contract.secType == "OPT":
             if contract.symbol not in self.options_strike_price_dict.keys():

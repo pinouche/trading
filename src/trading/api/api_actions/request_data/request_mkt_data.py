@@ -1,6 +1,7 @@
 """implement request live market data method"""
 
 import time
+from typing import Any
 
 from ibapi.contract import Contract
 
@@ -18,7 +19,7 @@ def request_market_data_stock(app: IBapi, ticker_symbol: str) -> None:
     check_price_is_live_and_is_float(app, app.nextorderId)
 
 
-def request_market_data(app: IBapi, contract: Contract) -> None:
+def request_market_data(app: IBapi, contract: Contract) -> list[float] | Any:
     """Request live point (i.e. not streaming: snapshot=True) market data for options or stocks."""
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
 
@@ -35,3 +36,5 @@ def request_market_data(app: IBapi, contract: Contract) -> None:
         if app.current_asset_price_dict[app.nextorderId].price:
             break
         time.sleep(0.1)
+
+    return app.current_asset_price_dict[app.nextorderId].price
