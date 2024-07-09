@@ -80,6 +80,7 @@ class IBapi(EWrapper, EClient):
         logger.info(f'''orderStatus - orderid: {orderId}, status:, {status}, filled, {filled}, remaining, {remaining},
                     lastFillPrice, {lastFillPrice}''')
         self.order_status[orderId] = {"status": status, "filled": filled, "remaining": remaining}
+        logger.info(f"We print order status dict {self.order_status}.")
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""

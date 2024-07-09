@@ -1,4 +1,5 @@
 import numpy as np
+from trading.api.api_actions.place_orders.place_option_orders import place_option_order
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
 from trading.api.api_actions.request_data.request_mkt_data import request_market_data
 from trading.api.contracts.option_contracts import get_options_contract
@@ -30,13 +31,12 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
 
     number_of_options = 1
     order = create_parent_order(app.nextorderId, "SELL", mid_price, number_of_options, False)  # type: ignore[arg-type]
-    app.placeOrder(app.nextorderId, option_contract, order)
+    place_option_order(app, option_contract, order)
 
     # wait until the options order has been filled
     wait_until_order_is_filled(app)
 
-    assert app.order_status[app.nextorderId]["remaining"] == 0
-    assert app.order_status[app.nextorderId]["filled"] == number_of_options
+    assert app.order_status[app.nextorderId-1]["remaining"] == 0
+    assert app.order_status[app.nextorderId-1]["filled"] == number_of_options
 
-    app.nextorderId += 1  # type: ignore
     app.disconnect()
