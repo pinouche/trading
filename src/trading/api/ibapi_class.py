@@ -32,15 +32,12 @@ class IBapi(EWrapper, EClient):
         self.nextorderId: int | None = None
 
         # contract details for options and stocks
-        self.options_price_dict: dict = {}
-        self.stocks_price_dict: dict = {}
-
-        # contract details for options and stocks
         self.options_strike_price_dict: dict = {}
         self.stocks_strike_price_dict: dict = {}
 
-        # data structure to hold current price requests
-        self.current_asset_price_dict: dict = {}
+        # data structure to hold current requests from reqMktData
+        self.current_asset_price_dict: dict = {}  # store prices
+        self.current_option_iv_dict: dict = {}
 
     def nextValidId(self, orderId: int | None) -> None:
         """Callback function to update the next valid order id"""
@@ -81,6 +78,17 @@ class IBapi(EWrapper, EClient):
                     lastFillPrice, {lastFillPrice}''')
         self.order_status[orderId] = {"status": status, "filled": filled, "remaining": remaining}
         logger.info(f"We print order status dict {self.order_status}.")
+
+    def tickOptionComputation(self, reqId: int, tickType: int, tickAttrib: int, impliedVol: float,
+                              delta: float, optPrice: float, pvDividend: float, gamma: float, vega: float, theta: float,
+                              undPrice: float) -> None:
+        """Gather data from the requestMktdata for options contract"""
+        logger.info(
+            f'''TickOptionComputation. TickerId: {reqId}, TickType: {tickType}, TickAttrib: {tickAttrib},
+                ImpliedVolatility: {impliedVol}, Delta: {delta}, OptionPrice: {optPrice}, pvDividend: {pvDividend},
+                Gamma: {gamma} Vega: {vega} Theta: {theta} UnderlyingPrice: {undPrice}.''')
+        if tickType == 12:  # this is the ticker corresponding to last
+            self.current_option_iv_dict[reqId] = impliedVol
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""

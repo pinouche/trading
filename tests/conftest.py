@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from dotenv import dotenv_values
+from ibapi.contract import Contract
 from loguru import logger
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.contracts.option_contracts import get_options_contract
@@ -56,3 +57,11 @@ def options_strikes(app: IBapi) -> list[float] | Any:
     contract_details = get_contract_details(app, option_contract)
 
     return contract_details
+
+
+@pytest.fixture()
+def option_contract(options_strikes: list[float]) -> Contract:
+    ticker_symbol = "TSLA"
+    date = get_next_friday()
+    strike_price = options_strikes[0]
+    return get_options_contract(ticker=ticker_symbol, contract_strike=strike_price, expiry_date=date)
