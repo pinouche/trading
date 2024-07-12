@@ -15,7 +15,6 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     date = get_next_friday()
     stock_contract = get_stock_contract(ticker=ticker_symbol)
     stock_price_list = request_market_data_price(app, stock_contract)
-
     mid_price = np.mean(stock_price_list)
     app.nextorderId += 1  # type: ignore
 

@@ -19,6 +19,7 @@ def test_request_data_price_options_contract(app: IBapi, option_contract: Contra
 
 def test_request_data_iv_options_contract(app: IBapi, option_contract: Contract) -> None:
 
+    print("OPTION CONTRACT", option_contract)
     implied_volatility = request_market_data_option_iv(app, option_contract)
 
     assert isinstance(implied_volatility, float)
