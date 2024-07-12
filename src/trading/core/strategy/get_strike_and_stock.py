@@ -4,7 +4,7 @@ import numpy as np
 from loguru import logger
 
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
-from trading.api.api_actions.request_data.request_mkt_data import request_market_data
+from trading.api.api_actions.request_data.request_mkt_data import request_market_data_option_iv, request_market_data_price
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
@@ -21,6 +21,33 @@ def compute_closest_percentage(strike_prices: np.array, stock_price: float) -> n
     return closest_strike
 
 
+def get_highest_iv_from_dic(dict_result: dict[str, tuple[float, float]]) -> tuple[str, float]:
+    """Retrieve the stock that has the highest iv for a given strike price."""
+    # Sort the dictionary items by the iv value
+    sorted_items = sorted(dict_result.items(), key=lambda item: item[1][0], reverse=True)
+    stock_ticker, items = sorted_items[0]
+    closest_strike_price = items[1]
+
+    return stock_ticker, closest_strike_price
+
+
+def get_options_strikes(app: IBapi, ticker_symbol: str, date: str | None = None) -> np.array:
+    """Retrieve the list of available strike prices for a given option contract."""
+    contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
+    contract_details = get_contract_details(app, contract)
+
+    return np.array(contract_details)
+
+
+def get_current_stock_price(app: IBapi, ticker_symbol: str) -> float:
+    """Retrieve the current stock price for a given ticker."""
+    stock_contract = get_stock_contract(ticker=ticker_symbol)
+    stock_price_list = request_market_data_price(app, stock_contract)
+    mid_price: float = np.round(np.mean(np.array(stock_price_list)[:2]), 2)
+
+    return mid_price
+
+
 def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None = None) -> tuple[str, float]:
     """Return the stock and the associated strike price for which the current price of the stock is the closest to
     the strike price. The strike price has to be in-the-money (lower than the current stock price).
@@ -31,21 +58,12 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
 
     for stock_ticker in stock_list:
 
-        # define option contract
-        option_contract = get_options_contract(ticker=stock_ticker, expiry_date=expiry_date)
-        # request option contract info
-        get_contract_details(app, option_contract)
-        dict_options_strike_price[stock_ticker] = app.options_strike_price_dict[stock_ticker]
+        # get the available strike prices
+        dict_options_strike_price[stock_ticker] = get_options_strikes(app, stock_ticker, expiry_date)
         app.nextorderId += 1  # type: ignore
 
-        # define the stock contract
-        stock_contract = get_stock_contract(stock_ticker)
-        # request the stock contract information
-        price_list = request_market_data(app, stock_contract)
-
-        # compute the mid-point between current bid and ask
-        mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
-        dict_stock_price[stock_ticker] = mid_price
+        # current stock price
+        dict_stock_price[stock_ticker] = get_current_stock_price(app, stock_ticker)
 
         closest_strike_price = compute_closest_percentage(dict_options_strike_price[stock_ticker],
                                                           dict_stock_price[stock_ticker])
@@ -58,3 +76,36 @@ def get_strike_and_stock(app: IBapi, stock_list: list, expiry_date: str | None =
     min_value = dict_result[stock_ticker]
 
     return stock_ticker, min_value
+
+
+def get_strike_and_highest_iv_stock(app: IBapi, stock_list: list, expiry_date: str | None = None) -> tuple[str, float]:
+    """Return the stock and the associated strike price for which the current price of the stock is the closest to
+    the strike price. The strike price has to be in-the-money (lower than the current stock price).
+    """
+    dict_stock_price = {}
+    dict_options_strike_price = {}
+    dict_result = {}
+
+    for stock_ticker in stock_list:
+        # get the available strike prices
+        dict_options_strike_price[stock_ticker] = get_options_strikes(app, stock_ticker, expiry_date)
+        app.nextorderId += 1  # type: ignore
+
+        # current stock price
+        dict_stock_price[stock_ticker] = get_current_stock_price(app, stock_ticker)
+        argmin = np.argmin(np.abs(dict_options_strike_price[stock_ticker]-dict_stock_price[stock_ticker]))
+        closest_strike_price = dict_options_strike_price[stock_ticker][argmin]
+
+        # get the corresponding option contract and request details (we are interested in iv)
+        option_contract = get_options_contract(ticker=stock_ticker, contract_strike=closest_strike_price, expiry_date=expiry_date)
+        iv = request_market_data_option_iv(app, option_contract)
+
+        logger.info(f"Closest price for stock: {stock_ticker}, strike price: {closest_strike_price}, "
+                    f"stock price: {dict_stock_price[stock_ticker]}, option iv is: {iv*100}%")
+
+        logger.info(f"current redId is {app.nextorderId}.")
+        dict_result[stock_ticker] = (iv, closest_strike_price)
+
+    stock_ticker, closest_strike_price = get_highest_iv_from_dic(dict_result)  # type: ignore
+
+    return stock_ticker, closest_strike_price

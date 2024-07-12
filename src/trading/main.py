@@ -12,12 +12,12 @@ from trading.api.api_actions.place_orders.place_option_orders import place_optio
 from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
-from trading.api.api_actions.request_data.request_mkt_data import request_market_data
+from trading.api.api_actions.request_data.request_mkt_data import request_market_data_price
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 from trading.api.orders.option_orders import create_parent_order
-from trading.core.strategy.get_strike_and_stock import get_strike_and_stock
+from trading.core.strategy.get_strike_and_stock import get_strike_and_highest_iv_stock, get_strike_and_stock
 from trading.utils import config_load, get_next_friday
 
 env_vars = dotenv_values(".env")
@@ -55,14 +55,21 @@ def main() -> IBapi:
         # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
         expiry_date = get_next_friday()
 
-    stock_ticker, strike_price = get_strike_and_stock(appl, stock_list, expiry_date)
+    # here, we get the stock we are interested in trading and the corresponding strike price
+    if config_vars["strategy"] == "closest_strike_price":
+        stock_ticker, strike_price = get_strike_and_stock(appl, stock_list, expiry_date)
+    elif config_vars["strategy"] == "highest_iv":
+        stock_ticker, strike_price = get_strike_and_highest_iv_stock(appl, stock_list, expiry_date)
+    else:
+        raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
+
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")
 
     # define option contract and request data for it.
     contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
     _ = get_contract_details(appl, contract)
-    price_list = request_market_data(appl, contract)
+    price_list = request_market_data_price(appl, contract)
 
     # compute the mid-point for the option price (ask+bid)/2.
     mid_price = np.round(np.mean(price_list), 2)
@@ -85,7 +92,7 @@ def main() -> IBapi:
     # get the stock contract for the above ticker
     stock_contract = get_stock_contract(ticker=stock_ticker)
     # Get the current stock price
-    price_list = request_market_data(appl, stock_contract)
+    price_list = request_market_data_price(appl, stock_contract)
     mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
 
     # place order to buy the stock
