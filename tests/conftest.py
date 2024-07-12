@@ -72,7 +72,7 @@ def current_stock_price(app: IBapi, ticker_symbol: str) -> float:
 
     stock_contract = get_stock_contract(ticker=ticker_symbol)
     stock_price_list = request_market_data_price(app, stock_contract)
-    mid_price: float = np.mean(stock_price_list)
+    mid_price: float = np.round(np.mean(np.array(stock_price_list)[:2]), 2)
 
     return mid_price
 

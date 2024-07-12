@@ -17,7 +17,7 @@ from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 from trading.api.orders.option_orders import create_parent_order
-from trading.core.strategy.get_strike_and_stock import get_strike_and_stock
+from trading.core.strategy.get_strike_and_stock import get_strike_and_highest_iv_stock, get_strike_and_stock
 from trading.utils import config_load, get_next_friday
 
 env_vars = dotenv_values(".env")
@@ -55,7 +55,14 @@ def main() -> IBapi:
         # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
         expiry_date = get_next_friday()
 
-    stock_ticker, strike_price = get_strike_and_stock(appl, stock_list, expiry_date)
+    # here, we get the stock we are interested in trading and the corresponding strike price
+    if config_vars["strategy"] == "closest_strike_price":
+        stock_ticker, strike_price = get_strike_and_stock(appl, stock_list, expiry_date)
+    elif config_vars["strategy"] == "highest_iv":
+        stock_ticker, strike_price = get_strike_and_highest_iv_stock(appl, stock_list, expiry_date)
+    else:
+        raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
+
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")
 
