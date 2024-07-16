@@ -56,12 +56,14 @@ def main() -> IBapi:
         expiry_date = get_next_friday()
 
     # here, we get the stock we are interested in trading and the corresponding strike price
+    logger.info("Start the parallel computing...")
     if config_vars["strategy"] == "closest_strike_price":
         stock_ticker, strike_price = get_strike_and_stock(appl, stock_list, expiry_date)
     elif config_vars["strategy"] == "highest_iv":
         stock_ticker, strike_price = get_strike_and_highest_iv_stock(appl, stock_list, expiry_date)
     else:
         raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
+    logger.info("End of the parallel computing...")
 
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")

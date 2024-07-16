@@ -10,4 +10,4 @@ percentage_profit_taking: 1
 
 buffer_allowed_pennies: 0.01
 
-strategy: "highest_iv"
+strategy: "closest_strike_price"
