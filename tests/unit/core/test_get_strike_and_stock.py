@@ -1,7 +1,7 @@
 """Test function to find the closest value that is below current price."""
 
 import pytest
-from trading.core.strategy.get_strike_and_stock import compute_closest_percentage, get_highest_iv_from_dic
+from trading.core.strategy.get_strike_and_stock import compute_closest_percentage, get_extrema_from_dic
 
 
 @pytest.mark.parametrize(
@@ -15,7 +15,7 @@ from trading.core.strategy.get_strike_and_stock import compute_closest_percentag
     ]
 )
 def test_compute_closest_percentage(strike_prices: list[float], stock_price: float, expected: float) -> None:
-    assert compute_closest_percentage(strike_prices, stock_price) == expected
+    assert compute_closest_percentage(strike_prices, stock_price)[0] == expected
 
 
 @pytest.mark.parametrize(
@@ -39,7 +39,7 @@ def test_get_highest_iv(initial_dict: dict[str, tuple[float, float]],
                         expected_stock_ticker: str,
                         expected_closest_strike_price: float) -> None:
 
-    stock_ticker, closest_strike_price = get_highest_iv_from_dic(initial_dict)
+    stock_ticker, closest_strike_price = get_extrema_from_dic(initial_dict, True)
 
     assert stock_ticker == expected_stock_ticker
     assert closest_strike_price == expected_closest_strike_price

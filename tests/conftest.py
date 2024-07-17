@@ -63,7 +63,6 @@ def options_strikes(app: IBapi, ticker_symbol: str) -> list[float] | Any:
     date = get_next_friday()
     option_contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
     contract_details = get_contract_details(app, option_contract)
-
     return contract_details
 
 

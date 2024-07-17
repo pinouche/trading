@@ -14,14 +14,14 @@ def get_contract_details(app: IBapi, contract: Contract) -> list | Any:
 
     if contract.secType == "STK":
         while app.nextorderId not in app.stocks_strike_price_dict:
-            time.sleep(0.2)
+            time.sleep(0.5)
 
         return app.stocks_strike_price_dict[app.nextorderId]
 
     elif contract.secType == "OPT":
         ticker_symbol = contract.symbol
         while ticker_symbol not in app.options_strike_price_dict:
-            time.sleep(0.2)
+            time.sleep(0.5)
 
         return app.options_strike_price_dict[ticker_symbol]
 
