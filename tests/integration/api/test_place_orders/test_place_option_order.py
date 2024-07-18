@@ -19,7 +19,7 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     app.nextorderId += 1  # type: ignore
 
     # get the available strike prices for the option contract
-    closest_itm_strike = compute_closest_percentage(options_strikes, mid_price)
+    closest_itm_strike, _ = compute_closest_percentage(options_strikes, mid_price)
 
     # get the price of the options for given strike price
     option_contract = get_options_contract(ticker=ticker_symbol, contract_strike=closest_itm_strike, expiry_date=date)
