@@ -11,7 +11,6 @@ from loguru import logger
 from trading.api.api_actions.place_orders.place_option_orders import place_option_order
 from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
-from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
 from trading.api.api_actions.request_data.request_mkt_data import request_market_data_price
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
@@ -72,10 +71,10 @@ def main() -> IBapi:
 
     # define option contract and request data for it.
     contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
-    _ = get_contract_details(appl, contract)
-    price_list = request_market_data_price(appl, contract)
 
-    # compute the mid-point for the option price (ask+bid)/2.
+    # TODO: here, we want to make a while loop and modify the order if it has not triggered in a while
+    # request the price list and compute the mid-point for the option price (ask+bid)/2
+    price_list = request_market_data_price(appl, contract)
     mid_price = np.round(np.mean(price_list), 2)
     appl.nextorderId += 1  # type: ignore
 
@@ -87,6 +86,7 @@ def main() -> IBapi:
                                 mid_price,
                                 config_vars["number_of_options"],
                                 False)  # type: ignore[arg-type]
+
     place_option_order(appl, contract, order)
     # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
     wait_until_order_is_filled(appl)
@@ -95,12 +95,20 @@ def main() -> IBapi:
 
     # get the stock contract for the above ticker
     stock_contract = get_stock_contract(ticker=stock_ticker)
+
     # Get the current stock price
     price_list = request_market_data_price(appl, stock_contract)
     mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
 
     # place order to buy the stock
-    place_simple_order(appl, stock_contract, "BUY", mid_price, config_vars["number_of_options"]*100)
+    place_simple_order(app=appl,
+                       contract=stock_contract,
+                       action="BUY",
+                       price=mid_price,
+                       quantity=config_vars["number_of_options"]*100,
+                       order_type="MIDPRICE",
+                       outside_hours=False)  # set the order to midprice (to auto track price changes)
+
     wait_until_order_is_filled(appl)
 
     logger.info("We are here now!")
