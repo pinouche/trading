@@ -55,6 +55,7 @@ def main() -> IBapi:
         # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
         expiry_date = get_next_friday()
 
+    start_time = time.time()
     # here, we get the stock we are interested in trading and the corresponding strike price
     if config_vars["strategy"] == "closest_strike_price":
         stock_ticker, strike_price = get_strike_and_stock(appl, stock_list, expiry_date)
@@ -62,6 +63,7 @@ def main() -> IBapi:
         stock_ticker, strike_price = get_strike_and_highest_iv_stock(appl, stock_list, expiry_date)
     else:
         raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
+    print("--- %s seconds ---" % (time.time() - start_time))
 
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")
