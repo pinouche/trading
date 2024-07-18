@@ -59,8 +59,6 @@ def main() -> IBapi:
         # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
         expiry_date = get_next_friday()
 
-    # here, we get the stock we are interested in trading and the corresponding strike price
-    start_time = time.time()
     logger.info("Start the parallel computing...")
     if config_vars["strategy"] == "closest_strike_price":
         stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_for_closest_strike, stock_list, expiry_date)
@@ -68,7 +66,6 @@ def main() -> IBapi:
         stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_iv, stock_list, expiry_date)
     else:
         raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
-    logger.info(f"End of the parallel computing... It took {time.time() - start_time} to execute.")
 
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")
