@@ -90,7 +90,6 @@ class IBapi(EWrapper, EClient):
 
         if tickType == 12:  # this is the ticker corresponding to last
             self.current_option_iv_dict[reqId] = impliedVol
-            print(self.current_option_iv_dict[reqId])
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""

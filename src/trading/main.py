@@ -60,9 +60,11 @@ def main() -> IBapi:
 
     logger.info("Start the parallel computing...")
     if config_vars["strategy"] == "closest_strike_price":
-        stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_for_closest_strike, stock_list, expiry_date)
+        stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_for_closest_strike, stock_list,
+                                                                  expiry_date, True)
     elif config_vars["strategy"] == "highest_iv":
-        stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_iv, stock_list, expiry_date)
+        stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_iv, stock_list,
+                                                                  expiry_date, True)
     else:
         raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
 
