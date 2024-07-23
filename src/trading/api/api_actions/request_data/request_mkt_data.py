@@ -40,11 +40,11 @@ def request_market_data_price(app: IBapi, contract: Contract) -> list[float] | A
         time.sleep(0.1)
 
     while True:
-        if len(app.current_asset_price_dict[app.nextorderId].price) == 2:
+        if len(app.current_asset_price_dict[app.nextorderId].price[-1]) == 2:
             break
         time.sleep(0.1)
 
-    return app.current_asset_price_dict[app.nextorderId].price
+    return app.current_asset_price_dict[app.nextorderId].price[-1]
 
 
 def request_market_data_option_iv(app: IBapi, contract: Contract) -> list[float] | Any:

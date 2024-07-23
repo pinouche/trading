@@ -9,5 +9,5 @@ env_vars = dotenv_values(".env")
 class StockInfo(BaseModel):
     """Stock card with defined attributes"""
 
-    price: list[float] = []
+    price: list[list] = []
     market_is_live: bool = False

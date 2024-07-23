@@ -10,9 +10,7 @@ from trading.api.ibapi_class import IBapi
 def wait_until_order_is_filled(app: IBapi, waiting_time: int = np.inf) -> bool:
     """wait until the order has been executed/received on TWS and make sure all the orders have been filled."""
     start_time = time.time()
-    print("WE ARE HERE", app.nextorderId, app.order_status)
     while app.nextorderId not in app.order_status:  # type: ignore
-        print("WE ARE HERE 2", app.nextorderId, app.order_status)
         time.sleep(0.1)
         time_lapsed = time.time() - start_time
         if time_lapsed > waiting_time:
@@ -21,7 +19,6 @@ def wait_until_order_is_filled(app: IBapi, waiting_time: int = np.inf) -> bool:
         # here we wait for all the options to have been sold before buying stocks
     while True:
         remaining = app.order_status[app.nextorderId]["remaining"]  # type: ignore
-        print("REMAINING", remaining)
         if remaining == 0:
             return True
 

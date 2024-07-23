@@ -15,24 +15,21 @@ from trading.core.exceptions.exceptions import PriceNotFloatError, PriceNotLiveE
 
 ])
 def test_check_price_is_live_and_is_float(app: IBapi,
-                                          price: float | None,
-                                          market_is_live: bool | None,
+                                          price: list | int | None,
+                                          market_is_live: bool,
                                           reqid: int,
                                           expected_error: PriceNotLiveError | PriceNotFloatError | None) -> None:
 
     app.current_asset_price_dict[reqid] = StockInfo()
-    app.current_asset_price_dict[reqid].price = price
+    app.current_asset_price_dict[reqid].price.append(price)  # type: ignore
     app.current_asset_price_dict[reqid].market_is_live = market_is_live
 
     if expected_error is None:
-        print(expected_error)
         check_price_is_live_and_is_float(app, reqid)
     elif isinstance(expected_error, PriceNotLiveError):
-        print(expected_error)
         with pytest.raises(PriceNotLiveError):
             check_price_is_live_and_is_float(app, reqid)
     elif isinstance(expected_error, PriceNotFloatError):
-        print(expected_error)
         with pytest.raises(PriceNotFloatError):
             check_price_is_live_and_is_float(app, reqid)
 
