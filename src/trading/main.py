@@ -79,6 +79,8 @@ def main() -> IBapi:
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
 
+        print("WE ARE HERE PRICE", price_list)
+
         logger.info(f" ORDER ID IS: {appl.nextorderId}")
         logger.info(f"the mid price is {mid_price}")
 
