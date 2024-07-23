@@ -29,7 +29,7 @@ def get_contract_details(app: IBapi, contract: Contract) -> list | Any:
                     current_strike_list_len = len(app.options_strike_price_dict[ticker_symbol])
                 else:
                     break
-            time.sleep(0.1)
+            time.sleep(0.2)
 
         return app.options_strike_price_dict[ticker_symbol]
 

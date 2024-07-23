@@ -22,6 +22,5 @@ def get_options_contract(ticker: str, contract_strike: float | str = "",
     contract.lastTradeDateOrContractMonth = expiry_date
     contract.right = right
     contract.multiplier = 100
-    contract.AlgoStrategy = "Adaptive"
 
     return contract

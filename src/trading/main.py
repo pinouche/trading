@@ -78,8 +78,8 @@ def main() -> IBapi:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
-        appl.nextorderId += 1  # type: ignore
 
+        logger.info(f" ORDER ID IS: {appl.nextorderId}")
         logger.info(f"the mid price is {mid_price}")
 
         # create an option sell order and fire it
@@ -92,8 +92,11 @@ def main() -> IBapi:
         place_option_order(appl, contract, order)
         # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
         bool_status = wait_until_order_is_filled(appl, config_vars["waiting_time_to_readjust_order"])
+        logger.info(f"WE ARE HERE BOOL STATUS {bool_status}")
         if bool_status:
             break
+
+    appl.nextorderId += 1  # type: ignore
 
     logger.info("It does not wait to see whether or not it is finished!!")
 

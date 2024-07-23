@@ -17,5 +17,6 @@ def create_parent_order(order_id: int, action: str, price: float, quantity: int,
     order.orderType = 'LMT'
     order.lmtPrice = price
     order.allOrNone = allornone
+    order.algoStrategy = "Adaptive"
 
     return order

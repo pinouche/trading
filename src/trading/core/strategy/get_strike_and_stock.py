@@ -76,7 +76,6 @@ def process_stock_ticker_iv(stock_ticker: str, app: IBapi, expiry_date: str | No
     """Function to find the iv for a given stock option."""
     # get the available strike prices
     dict_options_strike_price = get_options_strikes(app, stock_ticker, expiry_date)
-    print("OPTION STRIKES HERE", dict_options_strike_price)
     app.nextorderId += 1  # type: ignore
 
     # current stock price

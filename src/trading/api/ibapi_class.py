@@ -36,7 +36,7 @@ class IBapi(EWrapper, EClient):
         self.stocks_strike_price_dict: dict = {}
 
         # data structure to hold current requests from reqMktData
-        self.current_asset_price_dict: dict = {}  # store prices
+        self.current_asset_price_dict: dict[int, StockInfo] = {}
         self.current_option_iv_dict: dict = {}
 
     def nextValidId(self, orderId: int | None) -> None:
@@ -66,7 +66,8 @@ class IBapi(EWrapper, EClient):
 
     def execDetails(self, reqId: int, contract: Contract, execution: Execution) -> None:
         """Overwrite Ewrapper execDetails callback function."""
-        logger.info(f'''Order Executed: {reqId}, {contract.symbol}, {contract.secType}, {contract.currency}, {execution.execId},
+        logger.info(
+            f'''Order Executed: {reqId}, {contract.symbol}, {contract.secType}, {contract.currency}, {execution.execId},
         {execution.orderId}, {execution.shares}, {execution.lastLiquidity}.''')
         self.execution_details[execution.orderId] = {"contract": contract, "execution": execution}
 
@@ -93,13 +94,13 @@ class IBapi(EWrapper, EClient):
 
     def tickPrice(self, reqId: int, tickType: int, price: float, attrib: TickAttrib) -> None:
         """Callback function to obtain tickprice information when calling RqtMktData Eclient function."""
-        if reqId not in self.current_asset_price_dict.keys():
+        if reqId not in self.current_asset_price_dict:
             self.current_asset_price_dict[reqId] = StockInfo()
         if tickType == 1 or tickType == 2:
 
-            # Initialize the price list if it is None
-            if self.current_asset_price_dict[reqId].price is None:
-                self.current_asset_price_dict[reqId].price = []
+            # # Initialize the price list if it is None
+            # if self.current_asset_price_dict[reqId] is None:
+            #     self.current_asset_price_dict[reqId].price = []
 
             # Append the new price to the list
             self.current_asset_price_dict[reqId].price.append(price)
@@ -111,7 +112,7 @@ class IBapi(EWrapper, EClient):
 
     def marketDataType(self, reqId: int, marketDataType: int) -> None:
         """Ewrapper method to receive if market data is live/delayed/frozen from reqMktData()."""
-        if reqId not in self.current_asset_price_dict.keys():
+        if reqId not in self.current_asset_price_dict:
             self.current_asset_price_dict[reqId] = StockInfo()
         if marketDataType == 1:
             # Append the new price to the list
