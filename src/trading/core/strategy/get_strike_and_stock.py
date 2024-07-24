@@ -80,6 +80,7 @@ def process_stock_ticker_iv(stock_ticker: str, app: IBapi, expiry_date: str | No
 
     # current stock price
     stock_price = get_current_stock_price(app, stock_ticker)
+    dict_options_strike_price = dict_options_strike_price[dict_options_strike_price < stock_price]  # only itm options
     argmin = np.argmin(np.abs(dict_options_strike_price - stock_price))
     closest_strike_price = dict_options_strike_price[argmin]
 
@@ -111,9 +112,11 @@ def process_stock_ticker_for_closest_strike(stock_ticker: str, app: IBapi, expir
     return stock_ticker, (percentage, closest_strike_price)
 
 
-def get_strike_for_max_parameter(app: IBapi, func: Callable, stock_list: list, expiry_date: str | None = None) -> tuple[str, float]:
+def get_strike_for_max_parameter(app: IBapi, func: Callable, stock_list: list, expiry_date: str | None = None,
+                                 maximum: bool = True
+                                 ) -> tuple[str, float]:
     """Return the stock and the associated strike price with the highest implied volatility."""
     dict_result = process_in_parallel(func, stock_list, app, expiry_date)
-    stock_ticker, closest_strike_price = get_extrema_from_dic(dict_result)  # type: ignore
+    stock_ticker, closest_strike_price = get_extrema_from_dic(dict_result, maximum)  # type: ignore
 
     return stock_ticker, closest_strike_price

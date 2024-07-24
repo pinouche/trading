@@ -16,7 +16,7 @@ def request_market_data_price_stock(app: IBapi, ticker_symbol: str) -> None:
     # Snapshot is set to True, which means we only request a single data point (and not a stream of data).
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
     time.sleep(2)
-    check_price_is_live_and_is_float(app, app.nextorderId)
+    check_price_is_live_and_is_float(app, app.nextorderId)  # type: ignore
 
 
 def request_market_data_price(app: IBapi, contract: Contract) -> list[float] | Any:
@@ -40,11 +40,11 @@ def request_market_data_price(app: IBapi, contract: Contract) -> list[float] | A
         time.sleep(0.1)
 
     while True:
-        if len(app.current_asset_price_dict[app.nextorderId].price) == 2:
+        if len(app.current_asset_price_dict[app.nextorderId].price[-1]) == 2:
             break
         time.sleep(0.1)
 
-    return app.current_asset_price_dict[app.nextorderId].price
+    return app.current_asset_price_dict[app.nextorderId].price[-1]
 
 
 def request_market_data_option_iv(app: IBapi, contract: Contract) -> list[float] | Any:

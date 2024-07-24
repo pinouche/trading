@@ -34,6 +34,7 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
 
     # wait until the options order has been filled
     wait_until_order_is_filled(app)
+    app.nextorderId += 1  # type: ignore
 
     assert app.order_status[app.nextorderId-1]["remaining"] == 0
     assert app.order_status[app.nextorderId-1]["filled"] == number_of_options
