@@ -79,8 +79,6 @@ def main() -> IBapi:
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
 
-        print("WE ARE HERE PRICE", price_list)
-
         logger.info(f" ORDER ID IS: {appl.nextorderId}")
         logger.info(f"the mid price is {mid_price}")
 
@@ -119,8 +117,7 @@ def main() -> IBapi:
                        outside_hours=False)  # set the order to midprice (to auto track price changes)
 
     _ = wait_until_order_is_filled(appl)
-
-    logger.info("We are here now!")
+    appl.nextorderId += 1  # type: ignore
 
     # place a parent sell order if condition is reached with an attached child buy conditional order.
     place_conditional_parent_child_orders(appl, stock_contract, strike_price, mid_price)

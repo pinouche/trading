@@ -41,7 +41,6 @@ def place_simple_order(app: IBapi, contract: Contract, action: str, price: float
 
     order.transmit = True
     app.placeOrder(app.nextorderId, contract, order)
-    app.nextorderId += 1  # type: ignore
 
 
 def place_conditional_parent_child_orders(app: IBapi,
