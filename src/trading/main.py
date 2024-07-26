@@ -85,7 +85,7 @@ def main() -> IBapi:
         # create an option sell order and fire it
         order = create_parent_order(appl.nextorderId,
                                     "SELL",
-                                    mid_price,
+                                    mid_price-config_vars["buffer_allowed_pennies"],
                                     config_vars["number_of_options"],
                                     False)  # type: ignore[arg-type]
 
@@ -105,16 +105,17 @@ def main() -> IBapi:
 
     # Get the current stock price
     price_list = request_market_data_price(appl, stock_contract)
-    mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
+    _, ask_price = price_list[-2], price_list[-1]
+    # mid_price = np.round((ask_price+bid_price)/2, 2)
 
     # place order to buy the stock
     place_simple_order(app=appl,
                        contract=stock_contract,
                        action="BUY",
-                       price=mid_price,
+                       price=ask_price,
                        quantity=config_vars["number_of_options"]*100,
-                       order_type="MIDPRICE",
-                       outside_hours=False)  # set the order to midprice (to auto track price changes)
+                       order_type="LMT",
+                       outside_hours=True)  # set the order to midprice (to auto track price changes)
 
     _ = wait_until_order_is_filled(appl)
     appl.nextorderId += 1  # type: ignore
