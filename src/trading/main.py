@@ -74,8 +74,8 @@ def main() -> IBapi:
     # define option contract and request data for it.
     contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
 
-    bool_status = True
-    while bool_status:
+    bool_status = False
+    while not bool_status:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
