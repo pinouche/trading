@@ -105,8 +105,8 @@ def main() -> IBapi:
 
     # Get the current stock price
     price_list = request_market_data_price(appl, stock_contract)
-    _, ask_price = price_list[-2], price_list[-1]
-    # mid_price = np.round((ask_price+bid_price)/2, 2)
+    bid_price, ask_price = price_list[-2], price_list[-1]
+    mid_price = np.round((ask_price+bid_price)/2, 2)
 
     # place order to buy the stock
     place_simple_order(app=appl,
