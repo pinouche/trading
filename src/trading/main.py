@@ -74,13 +74,11 @@ def main() -> IBapi:
     # define option contract and request data for it.
     contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
 
-    while True:
+    bool_status = True
+    while bool_status:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
-
-        logger.info(f" ORDER ID IS: {appl.nextorderId}")
-        logger.info(f"the mid price is {mid_price}")
 
         # create an option sell order and fire it
         order = create_parent_order(appl.nextorderId,
@@ -92,9 +90,6 @@ def main() -> IBapi:
         place_option_order(appl, contract, order)
         # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
         bool_status = wait_until_order_is_filled(appl, config_vars["waiting_time_to_readjust_order"])
-        logger.info(f"WE ARE HERE BOOL STATUS {bool_status}")
-        if bool_status:
-            break
 
     appl.nextorderId += 1  # type: ignore
 
@@ -112,7 +107,7 @@ def main() -> IBapi:
     place_simple_order(app=appl,
                        contract=stock_contract,
                        action="BUY",
-                       price=ask_price,
+                       price=mid_price+config_vars["buffer_allowed_pennies"],
                        quantity=config_vars["number_of_options"]*100,
                        order_type="LMT",
                        outside_hours=True)  # set the order to midprice (to auto track price changes)
