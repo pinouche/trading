@@ -21,7 +21,7 @@ from trading.core.strategy.get_strike_and_stock import (
     process_stock_ticker_for_closest_strike,
     process_stock_ticker_iv,
 )
-from trading.utils import config_load, get_next_friday
+from trading.utils import config_load
 
 env_vars = dotenv_values(".env")
 config_vars = config_load("./config.yaml")
@@ -55,8 +55,8 @@ def main() -> IBapi:
 
     # The strategy works on 0DTE options.
     if datetime.today().weekday() != 4:
-        # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
-        expiry_date = get_next_friday()
+        raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
+        # expiry_date = get_next_friday()
 
     logger.info("Start the parallel computing...")
     if config_vars["strategy"] == "closest_strike_price":
@@ -74,27 +74,22 @@ def main() -> IBapi:
     # define option contract and request data for it.
     contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
 
-    while True:
+    bool_status = False
+    while not bool_status:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
 
-        logger.info(f" ORDER ID IS: {appl.nextorderId}")
-        logger.info(f"the mid price is {mid_price}")
-
         # create an option sell order and fire it
         order = create_parent_order(appl.nextorderId,
                                     "SELL",
-                                    mid_price,
+                                    mid_price-config_vars["buffer_allowed_pennies"],
                                     config_vars["number_of_options"],
                                     False)  # type: ignore[arg-type]
 
         place_option_order(appl, contract, order)
         # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
         bool_status = wait_until_order_is_filled(appl, config_vars["waiting_time_to_readjust_order"])
-        logger.info(f"WE ARE HERE BOOL STATUS {bool_status}")
-        if bool_status:
-            break
 
     appl.nextorderId += 1  # type: ignore
 
@@ -105,16 +100,17 @@ def main() -> IBapi:
 
     # Get the current stock price
     price_list = request_market_data_price(appl, stock_contract)
-    mid_price = np.round(np.mean(np.array(price_list)[:2]), 2)
+    bid_price, ask_price = price_list[-2], price_list[-1]
+    mid_price = np.round((ask_price+bid_price)/2, 2)
 
     # place order to buy the stock
     place_simple_order(app=appl,
                        contract=stock_contract,
                        action="BUY",
-                       price=mid_price,
+                       price=mid_price+config_vars["buffer_allowed_pennies"],
                        quantity=config_vars["number_of_options"]*100,
-                       order_type="MIDPRICE",
-                       outside_hours=False)  # set the order to midprice (to auto track price changes)
+                       order_type="LMT",
+                       outside_hours=True)  # set the order to midprice (to auto track price changes)
 
     _ = wait_until_order_is_filled(appl)
     appl.nextorderId += 1  # type: ignore
