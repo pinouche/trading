@@ -14,7 +14,10 @@ poetry.lock
 pythonclient/
 
 # notebooks
-Notebooks/
+#Notebooks/
+
+# pickle
+*.p
 
 # Distribution / packaging
 .Python
