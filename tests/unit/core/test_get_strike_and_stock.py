@@ -1,45 +1,38 @@
 """Test function to find the closest value that is below current price."""
 
 import pytest
-from trading.core.strategy.get_strike_and_stock import compute_closest_percentage, get_extrema_from_dic
+from trading.core.strategy.get_strike_and_stock import compute_score
 
 
 @pytest.mark.parametrize(
-    ("strike_prices", "stock_price", "expected"),
-    [
-        ([100, 110, 120], 115, 110),
-        ([90, 95, 105], 100, 95),
-        ([200, 210, 220], 205, 200),
-        ([150, 160, 170], 140, None),
-        ([50, 70, 80], 100, 80)
-    ]
-)
-def test_compute_closest_percentage(strike_prices: list[float], stock_price: float, expected: float) -> None:
-    assert compute_closest_percentage(strike_prices, stock_price)[0] == expected
-
-
-@pytest.mark.parametrize(
-    ("initial_dict", "expected_stock_ticker", "expected_closest_strike_price"),
+    ("input_data", "alpha_weight", "expected_key", "expected_value"),
     [
         (
-                {'AAPL': (0.25, 150), 'GOOGL': (0.30, 2800), 'AMZN': (0.28, 3400), 'TSLA': (0.35, 700)},
-                'TSLA', 700
+            {'AAPL': (0.3, 5.0, 10.0), 'GOOGL': (0.4, 10.0, 15.0), 'AMZN': (0.5, 2.0, 20.0)},
+            0.6,
+            'GOOGL',
+            15.0
         ),
         (
-                {'AAPL': (0.25, 150), 'MSFT': (0.40, 300), 'GOOGL': (0.30, 2800), 'AMZN': (0.28, 3400)},
-                'MSFT', 300
+            {'MSFT': (0.1, 7.0, 5.0), 'TSLA': (0.2, 4.0, 12.0), 'NFLX': (0.15, 3.0, 7.0)},
+            0.7,
+            'MSFT',
+            5.0
         ),
         (
-                {'AAPL': (0.25, 150), 'GOOGL': (0.30, 2800), 'AMZN': (0.28, 3400), 'TSLA': (1.1, 700)},
-                'TSLA', 700
+            {'FB': (0.35, 6.0, 9.0), 'NVDA': (0.25, 8.0, 14.0), 'AMD': (0.4, 5.0, 13.0)},
+            0.5,
+            'NVDA',
+            14.0
         ),
     ]
 )
-def test_get_highest_iv(initial_dict: dict[str, tuple[float, float]],
-                        expected_stock_ticker: str,
-                        expected_closest_strike_price: float) -> None:
+def test_compute_score(input_data: dict[str, tuple[float, float, float]],
+                       alpha_weight: float,
+                       expected_key: str,
+                       expected_value: float) -> None:
 
-    stock_ticker, closest_strike_price = get_extrema_from_dic(initial_dict, True)
+    result_key, result_value = compute_score(input_data, alpha_weight)
 
-    assert stock_ticker == expected_stock_ticker
-    assert closest_strike_price == expected_closest_strike_price
+    assert result_key == expected_key, f"Test failed: expected key {expected_key}, got {result_key}"
+    assert result_value == expected_value, f"Test failed: expected value {expected_value}, got {result_value}"

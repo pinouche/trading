@@ -14,6 +14,18 @@ from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 
 
+def compute_closest_percentage(strike_prices: np.array, stock_price: float) -> np.array:
+    """Compute % difference between the closest strike and current stock price."""
+    strike_prices = np.array(strike_prices)
+    strike_prices = strike_prices[(strike_prices / stock_price) < 1]
+    if len(strike_prices) == 0:
+        return None, None
+    closest_strike = strike_prices[np.argmax(strike_prices / stock_price)]
+    percentage = (closest_strike / stock_price)*100
+
+    return closest_strike, percentage
+
+
 def get_options_strikes(app: IBapi, ticker_symbol: str, date: str | None = None) -> np.array:
     """Retrieve the list of available strike prices for a given option contract."""
     contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
