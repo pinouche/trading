@@ -55,7 +55,7 @@ def main() -> IBapi:
     # The strategy works on 0DTE options.
     if datetime.today().weekday() != 4:
         raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
-        #expiry_date = get_next_friday()
+        #  expiry_date = get_next_friday()
 
     logger.info("Start the parallel computing...")
     if config_vars["strategy"] == "highest_iv":
