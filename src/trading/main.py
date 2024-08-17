@@ -1,10 +1,11 @@
 """main module that implements the trading app and connects to IBKR API."""
 
+import datetime
 import threading
 import time
-from datetime import datetime
 
 import numpy as np
+import pytz  # type: ignore
 from dotenv import dotenv_values
 from loguru import logger
 
@@ -50,12 +51,17 @@ def main() -> IBapi:
 
     # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
-    expiry_date = datetime.today().strftime("%Y%m%d")
+    expiry_date = datetime.datetime.today().strftime("%Y%m%d")
 
-    # The strategy works on 0DTE options.
-    if datetime.today().weekday() != 4:
+    # The strategy works on 0DTE options and we want to run it after 10 am.
+    if datetime.datetime.today().weekday() != 4:
         raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
-        #  expiry_date = get_next_friday()
+    else:
+        cet = pytz.timezone('CET')
+        current_time_cet = datetime.datetime.now(cet)
+        ten_am_cet = cet.localize(datetime.datetime.combine(current_time_cet, datetime.time(10, 0)))
+        if current_time_cet < ten_am_cet:
+            raise ValueError("Today is Friday, but we do not want to run the strategy before 10 am!")
 
     logger.info("Start the parallel computing...")
     if config_vars["strategy"] == "highest_iv":
