@@ -21,7 +21,7 @@ from trading.core.strategy.get_strike_and_stock import (
     get_strike_for_max_parameter,
     process_stock_ticker_iv,
 )
-from trading.utils import config_load
+from trading.utils import config_load, get_next_friday
 
 env_vars = dotenv_values(".env")
 config_vars = config_load("./config.yaml")
@@ -55,7 +55,8 @@ def main() -> IBapi:
 
     # The strategy works on 0DTE options and we want to run it after 10 am.
     if datetime.datetime.today().weekday() != 4:
-        raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
+        expiry_date = get_next_friday()
+        # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
     else:
         cet = pytz.timezone('CET')
         current_time_cet = datetime.datetime.now(cet)

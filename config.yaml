@@ -3,6 +3,7 @@ stocks:
   - NVDA
   - AMD
   - ARM
+  - RKLB
 
 number_of_options: 1
 percentage_profit_taking: 1

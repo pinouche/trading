@@ -34,11 +34,11 @@ def get_options_strikes(app: IBapi, ticker_symbol: str, date: str | None = None)
     return np.array(contract_details)
 
 
-def get_current_stock_price(app: IBapi, ticker_symbol: str) -> float:
+def get_current_stock_price(app: IBapi, ticker_symbol: str) -> np.float64:
     """Retrieve the current stock price for a given ticker."""
     stock_contract = get_stock_contract(ticker=ticker_symbol)
     stock_price_list = request_market_data_price(app, stock_contract)
-    mid_price: float = np.round(np.mean(np.array(stock_price_list)[:2]), 2)
+    mid_price: np.float64 = np.round(np.mean(np.array(stock_price_list)[:2]), 2)
 
     return mid_price
 
