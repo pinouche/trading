@@ -49,9 +49,12 @@ def get_final_ticker(stock_data: dict[str, float], top_k: int = 5) -> str:
     return max_key
 
 
-def scrape_top_trending_wsb_ticker() -> str:
+def scrape_top_trending_wsb_ticker() -> str | None:
     """Return the final ticker with most mentions"""
-    html_content = get_html()
-    stocks_dict = get_stock_dictionary(html_content)
-    ticker_symbol = get_final_ticker(stocks_dict)
+    try:
+        html_content = get_html()
+        stocks_dict = get_stock_dictionary(html_content)
+        ticker_symbol = get_final_ticker(stocks_dict)
+    except (ValueError, IndexError, TimeoutError):
+        ticker_symbol = None
     return ticker_symbol

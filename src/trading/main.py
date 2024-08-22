@@ -52,8 +52,12 @@ def main() -> IBapi:
 
     # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
+    # here instead of saying if use_wsb, we will put a test in place to see if iv/historical_iv > 100% using scanner.
+    # if this is the case, we will use the stock_list, else we use wsb ticker.
     if config_vars["strategy"] == "use_wsb":
-        stock_list = [scrape_top_trending_wsb_ticker()]
+        wsb_ticker = scrape_top_trending_wsb_ticker()
+        if wsb_ticker is not None:
+            stock_list = [scrape_top_trending_wsb_ticker()]
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
 
