@@ -21,6 +21,7 @@ from trading.core.strategy.get_strike_and_stock import (
     get_strike_for_max_parameter,
     process_stock_ticker_iv,
 )
+from trading.core.strategy.wsb_scraping.wsb_scrape_trending_ticker import scrape_top_trending_wsb_ticker
 from trading.utils import config_load, get_next_friday
 
 env_vars = dotenv_values(".env")
@@ -51,6 +52,9 @@ def main() -> IBapi:
 
     # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
+    if config_vars["strategy"] == "use_wsb":
+        stock_list = [scrape_top_trending_wsb_ticker()]
+
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
 
     # The strategy works on 0DTE options and we want to run it after 10 am.
@@ -65,10 +69,8 @@ def main() -> IBapi:
             raise ValueError("Today is Friday, but we do not want to run the strategy before 10 am!")
 
     logger.info("Start the parallel computing...")
-    if config_vars["strategy"] == "highest_iv":
-        stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_iv, stock_list, expiry_date)
-    else:
-        raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
+    # Here, we could use several defined strategies
+    stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_iv, stock_list, expiry_date)
 
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")

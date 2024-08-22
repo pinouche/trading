@@ -3,10 +3,9 @@ stocks:
   - NVDA
   - AMD
   - ARM
-  - RKLB
 
 number_of_options: 1
 percentage_profit_taking: 1
 buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30
-strategy: "highest_iv"
+strategy: "use_wsb"
