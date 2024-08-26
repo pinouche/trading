@@ -9,6 +9,7 @@ import pytz  # type: ignore
 from dotenv import dotenv_values
 from loguru import logger
 
+from trading.api.api_actions.market_scanner.request_market_scanner import get_scanner_ticker_list, request_scanner
 from trading.api.api_actions.place_orders.place_option_orders import place_option_order
 from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
@@ -52,9 +53,13 @@ def main() -> IBapi:
 
     # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
-    # here instead of saying if use_wsb, we will put a test in place to see if iv/historical_iv > 100% using scanner.
-    # if this is the case, we will use the stock_list, else we use wsb ticker.
-    if config_vars["strategy"] == "use_wsb":
+    # request scanner and get stocks with iv/hv >= 100% and iv_percentile >= 80%
+    request_scanner(appl)
+    scanner_stocks = get_scanner_ticker_list(appl)
+    logger.info(f"Stocks from Scanner are: {scanner_stocks}. Stocks from list are: {stock_list}.")
+    stock_list = [stock for stock in stock_list if stock in scanner_stocks]
+
+    if config_vars["strategy"] == "use_wsb" and not stock_list:  # only if we want to use wsb and stock list is empty
         wsb_ticker = scrape_top_trending_wsb_ticker()
         if wsb_ticker is not None:
             stock_list = [scrape_top_trending_wsb_ticker()]
@@ -87,11 +92,14 @@ def main() -> IBapi:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
+        mid_price -= config_vars["buffer_allowed_pennies"]
+        if mid_price < price_list[0]:
+            mid_price = price_list[0]
 
         # create an option sell order and fire it
         order = create_parent_order(appl.nextorderId,
                                     "SELL",
-                                    mid_price-config_vars["buffer_allowed_pennies"],
+                                    mid_price,
                                     config_vars["number_of_options"],
                                     False)  # type: ignore[arg-type]
 

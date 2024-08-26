@@ -1,5 +1,6 @@
 """Create and request market scanner data."""
 
+import time
 
 from ibapi.scanner import ScannerSubscription
 from ibapi.tag_value import TagValue
@@ -23,8 +24,10 @@ def request_scanner(app: IBapi, market_cap: str = "100000", iv_over_hv: str = "1
 
     app.reqScannerSubscription(app.nextorderId, sub, scan_options, filter_options)
 
+    time.sleep(0.5)
 
-def get_scanner_ticker_list(app: IBapi) -> list[str] | None:
+
+def get_scanner_ticker_list(app: IBapi) -> list[str]:
     """Retrieve stock list that are returned in the scanner."""
     ticker_list = []
     if app.scanner_data:
