@@ -66,7 +66,7 @@ def main() -> IBapi:
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
 
-    # The strategy works on 0DTE options and we want to run it after 10 am.
+    # The strategy works on 0DTE options, and we want to run it after 10 am.
     if datetime.datetime.today().weekday() != 4:
         expiry_date = get_next_friday()
         # raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")

@@ -24,8 +24,7 @@ To run test using pytest, simply run:
 * I first sell an ITM covered call option, and then perform simple dynamic delta-hedging. It outperforms covered and naked.
 * It is best to do this on high iv/hist iv.
 
-# TODO
+# TODO (WSB)
 
-* Write a script to get a short list of top 5 most mentioned stocks on WSB (use https://altindex.com/wallstreetbets)
-  and return the stock with most mentions % increase out of the top 5 most mentioned.
 * Back test that this chosen stock would perform well.
+* Write some unit test on the new scanner features

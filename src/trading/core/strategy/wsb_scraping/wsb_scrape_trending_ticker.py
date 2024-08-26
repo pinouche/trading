@@ -42,7 +42,7 @@ def get_stock_dictionary(html: str) -> dict[str, float]:
 
 def get_final_ticker(stock_data: dict[str, float], top_k: int = 5) -> str:
     """Return the final ticker with most mentions"""
-    top_keys = [key for key in stock_data if key not in ["RDDT", "SPY"]][:top_k]
+    top_keys = [key for key in stock_data if key not in ["RDDT", "SPY", "QQQ"]][:top_k]
     filtered_data = {key: stock_data[key] for key in top_keys}
     max_key = max(filtered_data, key=filtered_data.get)  # type: ignore
 
