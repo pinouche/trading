@@ -86,7 +86,7 @@ def process_stock_ticker_iv(stock_ticker: str, app: IBapi, expiry_date: str | No
     return stock_ticker, (iv, percentage_diff, closest_strike_price)
 
 
-def compute_score(dict_results: dict[str, tuple[float, float, float]], alpha_weight: float = 0.6) -> tuple[str, float]:
+def compute_score(dict_results: dict[str, tuple[float, float, float]], alpha_weight: float = 0.5) -> tuple[str, float]:
     """Compute a weighted score which takes into account both the iv and diff between strike price and stock price."""
     keys, ivs, diffs = zip(*[(k, v[0], v[1]) for k, v in dict_results.items()])
 

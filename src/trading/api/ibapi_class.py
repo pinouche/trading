@@ -40,6 +40,9 @@ class IBapi(EWrapper, EClient):
         self.current_asset_price_dict: dict[int, StockInfo] = {}
         self.current_option_iv_dict: dict = {}
 
+        # data from scanner
+        self.scanner_data: dict = {}
+
     def nextValidId(self, orderId: int | None) -> None:
         """Callback function to update the next valid order id"""
         self.nextorderId = orderId
@@ -127,3 +130,17 @@ class IBapi(EWrapper, EClient):
 
             logger.info(
                 f'Live data is: {True} for reqId {reqId}.')
+
+    def scannerData(self, reqId: int, rank: int, contractDetails: ContractDetails,
+                    distance: str, benchmark: str, projection: str, legsStr: str) -> None:
+        """Ewrapper method to receive scanner data."""
+        logger.info(
+            f"scannerData. reqId: {reqId}, rank: {rank}, contractDetails: {contractDetails}, "
+            f"distance: {distance}, benchmark: {benchmark}, projection: {projection}, legsStr: {legsStr}.")
+        self.scanner_data[rank] = [contractDetails, distance, benchmark, projection, legsStr]
+
+    def scannerDataEnd(self, reqId: int) -> None:
+        """EWrapper methods to close the scanner."""
+        logger.info("ScannerDataEnd!")
+        # end the scanner
+        self.cancelScannerSubscription(reqId)
