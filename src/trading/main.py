@@ -63,6 +63,9 @@ def main() -> IBapi:
         wsb_ticker = scrape_top_trending_wsb_ticker()
         if wsb_ticker is not None:
             stock_list = [scrape_top_trending_wsb_ticker()]
+            logger.info(f"We are going to use WSB stock {wsb_ticker}")
+        else:
+            raise ValueError("We are using WSB ticker but we got None.")
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
 
