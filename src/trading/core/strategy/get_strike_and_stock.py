@@ -90,11 +90,15 @@ def compute_score(dict_results: dict[str, tuple[float, float, float]], alpha_wei
     """Compute a weighted score which takes into account both the iv and diff between strike price and stock price."""
     keys, ivs, diffs = zip(*[(k, v[0], v[1]) for k, v in dict_results.items()])
 
-    ivs = (np.array(ivs) - np.mean(ivs)) / np.std(ivs)
-    diffs = (np.array(diffs) - np.mean(diffs)) / np.std(diffs)
+    # if we use wsb top trending stock, no need to compute scores
+    if len(ivs) == 1:
+        best_index = 0
+    else:
+        ivs = (np.array(ivs) - np.mean(ivs)) / np.std(ivs)
+        diffs = (np.array(diffs) - np.mean(diffs)) / np.std(diffs)
 
-    score = (1 - alpha_weight) * ivs + alpha_weight * diffs   # type: ignore
-    best_index = np.argmax(score)
+        score = (1 - alpha_weight) * ivs + alpha_weight * diffs   # type: ignore
+        best_index = np.argmax(score)
 
     return keys[best_index], dict_results[keys[best_index]][-1]
 
