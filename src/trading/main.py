@@ -1,13 +1,15 @@
 """main module that implements the trading app and connects to IBKR API."""
 
+import datetime
 import threading
 import time
-from datetime import datetime
 
 import numpy as np
+import pytz  # type: ignore
 from dotenv import dotenv_values
 from loguru import logger
 
+from trading.api.api_actions.market_scanner.request_market_scanner import get_scanner_ticker_list, request_scanner
 from trading.api.api_actions.place_orders.place_option_orders import place_option_order
 from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
@@ -20,6 +22,7 @@ from trading.core.strategy.get_strike_and_stock import (
     get_strike_for_max_parameter,
     process_stock_ticker_iv,
 )
+from trading.core.strategy.wsb_scraping.wsb_scrape_trending_ticker import scrape_top_trending_wsb_ticker
 from trading.utils import config_load
 
 env_vars = dotenv_values(".env")
@@ -50,18 +53,36 @@ def main() -> IBapi:
 
     # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
-    expiry_date = datetime.today().strftime("%Y%m%d")
+    # request scanner and get stocks with iv/hv >= 100% and iv_percentile >= 80%
+    request_scanner(appl)
+    scanner_stocks = get_scanner_ticker_list(appl)
+    logger.info(f"Stocks from Scanner are: {scanner_stocks}. Stocks from list are: {stock_list}.")
+    stock_list = [stock for stock in stock_list if stock in scanner_stocks]
 
-    # The strategy works on 0DTE options.
-    if datetime.today().weekday() != 4:
+    if config_vars["strategy"] == "use_wsb" and not stock_list:  # only if we want to use wsb and stock list is empty
+        wsb_ticker = scrape_top_trending_wsb_ticker()
+        if wsb_ticker is not None:
+            stock_list = [scrape_top_trending_wsb_ticker()]
+            logger.info(f"We are going to use WSB stock {wsb_ticker}")
+        else:
+            raise ValueError("We are using WSB ticker but we got None.")
+
+    expiry_date = datetime.datetime.today().strftime("%Y%m%d")
+
+    # The strategy works on 0DTE options, and we want to run it after 10 am.
+    if datetime.datetime.today().weekday() != 4:
+        # expiry_date = get_next_friday()
         raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
-        #  expiry_date = get_next_friday()
+    else:
+        cet = pytz.timezone('CET')
+        current_time_cet = datetime.datetime.now(cet)
+        ten_am_cet = cet.localize(datetime.datetime.combine(current_time_cet, datetime.time(10, 0)))
+        if current_time_cet < ten_am_cet:
+            raise ValueError("Today is Friday, but we do not want to run the strategy before 10 am!")
 
     logger.info("Start the parallel computing...")
-    if config_vars["strategy"] == "highest_iv":
-        stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_iv, stock_list, expiry_date)
-    else:
-        raise ValueError(f"Expected strategy to be in ['closest_strike_price', 'highest_iv'], got {config_vars['strategy']}.")
+    # Here, we could use several defined strategies
+    stock_ticker, strike_price = get_strike_for_max_parameter(appl, process_stock_ticker_iv, stock_list, expiry_date)
 
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")
@@ -74,11 +95,14 @@ def main() -> IBapi:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
+        mid_price -= config_vars["buffer_allowed_pennies"]
+        if mid_price < price_list[0]:
+            mid_price = price_list[0]
 
         # create an option sell order and fire it
         order = create_parent_order(appl.nextorderId,
                                     "SELL",
-                                    mid_price-config_vars["buffer_allowed_pennies"],
+                                    mid_price,
                                     config_vars["number_of_options"],
                                     False)  # type: ignore[arg-type]
 

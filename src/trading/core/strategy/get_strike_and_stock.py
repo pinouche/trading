@@ -34,11 +34,11 @@ def get_options_strikes(app: IBapi, ticker_symbol: str, date: str | None = None)
     return np.array(contract_details)
 
 
-def get_current_stock_price(app: IBapi, ticker_symbol: str) -> float:
+def get_current_stock_price(app: IBapi, ticker_symbol: str) -> np.float64:
     """Retrieve the current stock price for a given ticker."""
     stock_contract = get_stock_contract(ticker=ticker_symbol)
     stock_price_list = request_market_data_price(app, stock_contract)
-    mid_price: float = np.round(np.mean(np.array(stock_price_list)[:2]), 2)
+    mid_price: np.float64 = np.round(np.mean(np.array(stock_price_list)[:2]), 2)
 
     return mid_price
 
@@ -86,19 +86,19 @@ def process_stock_ticker_iv(stock_ticker: str, app: IBapi, expiry_date: str | No
     return stock_ticker, (iv, percentage_diff, closest_strike_price)
 
 
-def compute_score(dict_results: dict[str, tuple[float, float, float]], alpha_weight: float = 0.6) -> tuple[str, float]:
+def compute_score(dict_results: dict[str, tuple[float, float, float]], alpha_weight: float = 0.5) -> tuple[str, float]:
     """Compute a weighted score which takes into account both the iv and diff between strike price and stock price."""
     keys, ivs, diffs = zip(*[(k, v[0], v[1]) for k, v in dict_results.items()])
 
-    print("ivs", ivs)
-    print("diffs", diffs)
+    # if we use wsb top trending stock, no need to compute scores
+    if len(ivs) == 1:
+        best_index = 0
+    else:
+        ivs = (np.array(ivs) - np.mean(ivs)) / np.std(ivs)
+        diffs = (np.array(diffs) - np.mean(diffs)) / np.std(diffs)
 
-    ivs = (np.array(ivs) - np.mean(ivs)) / np.std(ivs)
-    diffs = (np.array(diffs) - np.mean(diffs)) / np.std(diffs)
-
-    score = (1 - alpha_weight) * ivs + alpha_weight * diffs   # type: ignore
-    print("score", score)
-    best_index = np.argmax(score)
+        score = (1 - alpha_weight) * ivs + alpha_weight * diffs   # type: ignore
+        best_index = np.argmax(score)
 
     return keys[best_index], dict_results[keys[best_index]][-1]
 
