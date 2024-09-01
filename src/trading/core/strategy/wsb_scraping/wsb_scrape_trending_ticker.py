@@ -1,5 +1,7 @@
 """Get a single WSB trending ticker from an auto-refreshed list. We want the most rising mentions within the top 5."""
 
+from heapq import nlargest
+
 import requests  # type: ignore
 from bs4 import BeautifulSoup
 
@@ -40,16 +42,16 @@ def get_stock_dictionary(html: str) -> dict[str, float]:
     return stock_data
 
 
-def get_final_ticker(stock_data: dict[str, float], top_k: int = 5) -> str:
-    """Return the final ticker with most mentions"""
-    top_keys = [key for key in stock_data if key not in ["RDDT", "SPY", "QQQ"]][:top_k]
+def get_final_ticker(stock_data: dict[str, float], top_k: int = 5, top_p: int = 2) -> list[str]:
+    """Get the ticker with the most recent mentions"""
+    top_keys = [key for key in stock_data if key not in ["RDDT", "SPY"]][:top_k]
     filtered_data = {key: stock_data[key] for key in top_keys}
-    max_key = max(filtered_data, key=filtered_data.get)  # type: ignore
+    top_p_keys = nlargest(top_p, filtered_data, key=filtered_data.get)  # type: ignore
 
-    return max_key
+    return top_p_keys
 
 
-def scrape_top_trending_wsb_ticker() -> str | None:
+def scrape_top_trending_wsb_ticker() -> list[str] | None:
     """Return the final ticker with most mentions"""
     try:
         html_content = get_html()
