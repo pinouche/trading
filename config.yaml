@@ -6,7 +6,7 @@ stocks:
 
 green_color: "#417505"
 
-number_of_options: 1
+cash_to_trade: 1000
 
 buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30
