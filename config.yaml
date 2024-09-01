@@ -4,6 +4,8 @@ stocks:
   - AMD
   - ARM
 
+green_color: "#417505"
+
 number_of_options: 1
 
 buffer_allowed_pennies: 0.05

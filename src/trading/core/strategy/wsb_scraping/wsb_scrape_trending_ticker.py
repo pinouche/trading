@@ -5,6 +5,10 @@ from heapq import nlargest
 import requests  # type: ignore
 from bs4 import BeautifulSoup
 
+from trading.utils import config_load
+
+config_vars = config_load("./config.yaml")
+
 
 def get_html() -> str:
     """Scrape the HTML to get a list of tickers."""
@@ -20,7 +24,7 @@ def get_html() -> str:
 
 
 def get_stock_dictionary(html: str) -> dict[str, float]:
-    """Parse the HTML to obtain a list of tickers and their corresponding % mentions"""
+    """Scrape WSB trending stocks"""
     soup = BeautifulSoup(html, 'html.parser')
     rows = soup.find_all('tr')
 
@@ -36,13 +40,17 @@ def get_stock_dictionary(html: str) -> dict[str, float]:
             # Find the percentage of mentions
             mention_cell = row.find_all('td')[2]
             if mention_cell:
-                percentage = mention_cell.find('span').text.strip()
-                stock_data[company_cell] = float(percentage.replace('%', ''))
+                # Find the span element
+                span = mention_cell.find('span')
+                style = span.get('style')
+                percentage = span.text.strip()
+                if config_vars["green_color"] in style:
+                    stock_data[company_cell] = float(percentage.replace('%', ''))
 
     return stock_data
 
 
-def get_final_ticker(stock_data: dict[str, float], top_k: int = 5, top_p: int = 2) -> list[str]:
+def get_final_ticker(stock_data: dict[str, float], top_k: int = 5, top_p: int = 5) -> list[str]:
     """Get the ticker with the most recent mentions"""
     top_keys = [key for key in stock_data if key not in ["RDDT", "SPY"]][:top_k]
     filtered_data = {key: stock_data[key] for key in top_keys}
