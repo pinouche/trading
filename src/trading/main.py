@@ -95,7 +95,11 @@ def main() -> IBapi:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, contract)
         mid_price = np.round(np.mean(price_list), 2)
-        mid_price -= config_vars["buffer_allowed_pennies"]
+
+        if mid_price/100 >= config_vars["buffer_allowed_pennies"]:
+            mid_price -= 0.01
+        else:
+            mid_price -= config_vars["buffer_allowed_pennies"]
         if mid_price < price_list[0]:
             mid_price = price_list[0]
 
