@@ -99,6 +99,8 @@ def main() -> IBapi:
         buffer_allowed_pennies = 0.01
 
     number_of_options = int(config_vars["cash_to_trade"]/(stock_price*100))
+    if number_of_options == 0:
+        raise ValueError(f"Not enough cash available to trade stock {stock_ticker}")
 
     # define option contract and request data for it.
     option_contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
