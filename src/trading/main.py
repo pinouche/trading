@@ -8,7 +8,6 @@ import numpy as np
 import pytz  # type: ignore
 from dotenv import dotenv_values
 from loguru import logger
-
 from trading.api.api_actions.market_scanner.request_market_scanner import get_scanner_ticker_list, request_scanner
 from trading.api.api_actions.place_orders.place_option_orders import place_option_order
 from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
@@ -61,11 +60,9 @@ def main() -> IBapi:
     stock_list = [stock for stock in stock_list if stock in scanner_stocks]
 
     if config_vars["strategy"] == "use_wsb" and not stock_list:  # only if we want to use wsb and stock list is empty
-        wsb_ticker = scrape_top_trending_wsb_ticker()
-        if wsb_ticker is not None:
-            stock_list = [scrape_top_trending_wsb_ticker()]
-            logger.info(f"We are going to use WSB stock {wsb_ticker}")
-        else:
+        stock_list = scrape_top_trending_wsb_ticker()
+        logger.info(f"We are going to use WSB stocks {stock_list}")
+        if stock_list is None:
             raise ValueError("We are using WSB ticker but we got None.")
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
