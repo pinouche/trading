@@ -8,8 +8,8 @@ from trading.api.ibapi_class import IBapi
 @pytest.mark.parametrize(
     ("market_cap", "iv_percentile", "expected_data_bool"),
     [
-        ("100000", "0.5", True),
-        ("100000", "1.0", False)
+        ("100000", "0.5", True),  # 100 billion market cap
+        ("10000000", "0.5", False)  # 10 trillion
     ])
 def test_request_scanner(app: IBapi, market_cap: str, iv_percentile: str, expected_data_bool: bool) -> None:
     request_scanner(app, market_cap=market_cap, iv_percentile=iv_percentile)
