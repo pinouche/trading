@@ -42,10 +42,10 @@ def get_stock_dictionary(html: str) -> dict[str, float]:
             if mention_cell:
                 # Find the span element
                 span = mention_cell.find('span')
-                style = span.get('style')
+                span.get('style')
                 percentage = span.text.strip()
-                if config_vars["green_color"] in style:
-                    stock_data[company_cell] = float(percentage.replace('%', ''))
+                # if config_vars["green_color"] in style:
+                stock_data[company_cell] = float(percentage.replace('%', ''))
 
     return stock_data
 
@@ -65,6 +65,7 @@ def scrape_top_trending_wsb_ticker() -> list[str] | None:
         html_content = get_html()
         stocks_dict = get_stock_dictionary(html_content)
         ticker_symbol = get_final_ticker(stocks_dict)
+        print(ticker_symbol)
     except (ValueError, IndexError, TimeoutError):
         ticker_symbol = None
     return ticker_symbol

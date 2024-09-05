@@ -8,6 +8,7 @@ import numpy as np
 import pytz  # type: ignore
 from dotenv import dotenv_values
 from loguru import logger
+
 from trading.api.api_actions.market_scanner.request_market_scanner import get_scanner_ticker_list, request_scanner
 from trading.api.api_actions.place_orders.place_option_orders import place_option_order
 from trading.api.api_actions.place_orders.place_stock_orders import place_conditional_parent_child_orders, place_simple_order
@@ -91,13 +92,18 @@ def main() -> IBapi:
     bid_price, ask_price = price_list[-2], price_list[-1]
     stock_price = np.round((ask_price + bid_price) / 2, 2)
 
+    appl.nextorderId += 1
+
     # dynamically set buffer_allowed_pennies (if it is bigger than 0.5% of the stock price, reduce it to 1 cent)
     if stock_price/200 <= buffer_allowed_pennies:
         buffer_allowed_pennies = 0.01
 
-    number_of_options = int(config_vars["cash_to_trade"]/(stock_price*100))
-    if number_of_options == 0:
-        raise ValueError(f"Not enough cash available to trade stock {stock_ticker}")
+    number_of_options = config_vars["number_of_options"]
+    if number_of_options == -1:
+        number_of_options = int(config_vars["cash_to_trade"]/(stock_price*100))
+        if number_of_options == 0:
+            raise ValueError(f"Not enough cash available to trade stock {stock_ticker}. I have {config_vars['cash_to_trade']},"
+                             f"need at least {stock_price*100}.")
 
     # define option contract and request data for it.
     option_contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
@@ -107,7 +113,6 @@ def main() -> IBapi:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, option_contract)
         mid_price = np.round(np.mean(price_list), 2)
-        mid_price -= buffer_allowed_pennies
         if mid_price < price_list[0]:
             mid_price = price_list[0]
 
