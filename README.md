@@ -27,4 +27,4 @@ To run test using pytest, simply run:
 # TODO (WSB)
 
 * Back test that this chosen stock would perform well.
-* Write some unit test on the new scanner features
+* Take a couple of stocks from WSB instead of most popular (top 2 most popular) and run the same score computation.

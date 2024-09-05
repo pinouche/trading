@@ -4,7 +4,6 @@ import time
 
 from ibapi.scanner import ScannerSubscription
 from ibapi.tag_value import TagValue
-
 from trading.api.ibapi_class import IBapi
 
 
@@ -24,7 +23,7 @@ def request_scanner(app: IBapi, market_cap: str = "100000", iv_over_hv: str = "1
 
     app.reqScannerSubscription(app.nextorderId, sub, scan_options, filter_options)
 
-    time.sleep(0.5)
+    time.sleep(1.0)
 
 
 def get_scanner_ticker_list(app: IBapi) -> list[str]:

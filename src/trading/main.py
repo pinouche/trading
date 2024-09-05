@@ -53,6 +53,7 @@ def main() -> IBapi:
 
     # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
+    buffer_allowed_pennies = config_vars["buffer_allowed_pennies"]
     # request scanner and get stocks with iv/hv >= 100% and iv_percentile >= 80%
     request_scanner(appl)
     scanner_stocks = get_scanner_ticker_list(appl)
@@ -60,11 +61,9 @@ def main() -> IBapi:
     stock_list = [stock for stock in stock_list if stock in scanner_stocks]
 
     if config_vars["strategy"] == "use_wsb" and not stock_list:  # only if we want to use wsb and stock list is empty
-        wsb_ticker = scrape_top_trending_wsb_ticker()
-        if wsb_ticker is not None:
-            stock_list = [scrape_top_trending_wsb_ticker()]
-            logger.info(f"We are going to use WSB stock {wsb_ticker}")
-        else:
+        stock_list = scrape_top_trending_wsb_ticker()
+        logger.info(f"We are going to use WSB stocks {stock_list}")
+        if stock_list is None:
             raise ValueError("We are using WSB ticker but we got None.")
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
@@ -87,26 +86,47 @@ def main() -> IBapi:
     appl.nextorderId += 1  # type: ignore
     logger.info(f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}.")
 
+    # Get the current stock price
+    stock_contract = get_stock_contract(ticker=stock_ticker)
+    price_list = request_market_data_price(appl, stock_contract)
+    bid_price, ask_price = price_list[-2], price_list[-1]
+    stock_price = np.round((ask_price + bid_price) / 2, 2)
+
+    appl.nextorderId += 1
+
+    # dynamically set buffer_allowed_pennies (if it is bigger than 0.5% of the stock price, reduce it to 1 cent)
+    if stock_price/200 <= buffer_allowed_pennies:
+        buffer_allowed_pennies = 0.01
+
+    number_of_options = config_vars["number_of_options"]
+    if number_of_options == -1:
+        number_of_options = int(config_vars["cash_to_trade"]/(stock_price*100))
+        if number_of_options == 0:
+            raise ValueError(f"Not enough cash available to trade stock {stock_ticker}. I have {config_vars['cash_to_trade']},"
+                             f"need at least {stock_price*100}.")
+
     # define option contract and request data for it.
-    contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
+    option_contract = get_options_contract(ticker=stock_ticker, contract_strike=strike_price, expiry_date=expiry_date, right="C")
 
     bool_status = False
     while not bool_status:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
-        price_list = request_market_data_price(appl, contract)
+        price_list = request_market_data_price(appl, option_contract)
         mid_price = np.round(np.mean(price_list), 2)
-        mid_price -= config_vars["buffer_allowed_pennies"]
         if mid_price < price_list[0]:
             mid_price = price_list[0]
+
+        if strike_price + mid_price <= stock_price:
+            raise ValueError("strike price + premium <= stock price!!")
 
         # create an option sell order and fire it
         order = create_parent_order(appl.nextorderId,
                                     "SELL",
                                     mid_price,
-                                    config_vars["number_of_options"],
+                                    number_of_options,
                                     False)  # type: ignore[arg-type]
 
-        place_option_order(appl, contract, order)
+        place_option_order(appl, option_contract, order)
         # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
         bool_status = wait_until_order_is_filled(appl, config_vars["waiting_time_to_readjust_order"])
 
@@ -126,8 +146,8 @@ def main() -> IBapi:
     place_simple_order(app=appl,
                        contract=stock_contract,
                        action="BUY",
-                       price=mid_price+config_vars["buffer_allowed_pennies"],
-                       quantity=config_vars["number_of_options"]*100,
+                       price=mid_price+buffer_allowed_pennies,
+                       quantity=number_of_options*100,
                        order_type="LMT",
                        outside_hours=True)  # set the order to midprice (to auto track price changes)
 
