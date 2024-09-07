@@ -75,7 +75,7 @@ def main() -> IBapi:
     else:
         cet = pytz.timezone('CET')
         current_time_cet = datetime.datetime.now(cet)
-        ten_am_cet = cet.localize(datetime.datetime.combine(current_time_cet, datetime.time(10, 0)))
+        ten_am_cet = cet.localize(datetime.datetime.combine(current_time_cet, datetime.time(9, 30)))
         if current_time_cet < ten_am_cet:
             raise ValueError("Today is Friday, but we do not want to run the strategy before 10 am!")
 
