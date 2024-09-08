@@ -6,13 +6,13 @@ from trading.api.ibapi_class import IBapi
 
 
 @pytest.mark.parametrize(
-    ("market_cap", "iv_percentile", "expected_data_bool"),
+    ("market_cap", "implied_vol", "expected_data_bool"),
     [
         ("100000", "0.5", True),  # 100 billion market cap
         ("10000000", "0.5", False)  # 10 trillion
     ])
-def test_request_scanner(app: IBapi, market_cap: str, iv_percentile: str, expected_data_bool: bool) -> None:
-    request_scanner(app, market_cap=market_cap, iv_percentile=iv_percentile)
+def test_request_scanner(app: IBapi, market_cap: str, implied_vol: str, expected_data_bool: bool) -> None:
+    request_scanner(app, market_cap=market_cap, implied_vol=implied_vol)
 
     dictionary_data = app.scanner_data
     if expected_data_bool:

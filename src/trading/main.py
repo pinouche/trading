@@ -73,9 +73,10 @@ def main() -> IBapi:
         # expiry_date = get_next_friday()
         raise ValueError("Today is not a Friday, cannot run the delta hedging strategy!")
     else:
+        minutes_after_nine = config_vars["start_time_after_nine"]
         cet = pytz.timezone('CET')
         current_time_cet = datetime.datetime.now(cet)
-        ten_am_cet = cet.localize(datetime.datetime.combine(current_time_cet, datetime.time(9, 30)))
+        ten_am_cet = cet.localize(datetime.datetime.combine(current_time_cet, datetime.time(9, minutes_after_nine)))
         if current_time_cet < ten_am_cet:
             raise ValueError("Today is Friday, but we do not want to run the strategy before 10 am!")
 

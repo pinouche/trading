@@ -6,10 +6,21 @@ from ibapi.scanner import ScannerSubscription
 from ibapi.tag_value import TagValue
 
 from trading.api.ibapi_class import IBapi
+from trading.utils import config_load
+
+config_vars = config_load("./config.yaml")
 
 
-def request_scanner(app: IBapi, market_cap: str = "100000", iv_over_hv: str = "100", iv_percentile: str = "0.8") -> None:
+def request_scanner(app: IBapi,
+                    market_cap: str = "100000",
+                    implied_vol: str = "70",
+                    iv_over_hv: str = "100",
+                    iv_percentile: str = "0.8") -> None:
     """Scanner request."""
+    # minimum is 70%, if we provide more we accept. Else, we take 70.
+    if float(config_vars["minimum_volatility"]) > 70:
+        implied_vol = config_vars["minimum_volatility"]
+
     sub = ScannerSubscription()
     sub.instrument = "STK"
     sub.locationCode = "STK.US.MAJOR"
@@ -18,8 +29,9 @@ def request_scanner(app: IBapi, market_cap: str = "100000", iv_over_hv: str = "1
     scan_options: list = []
     filter_options = [
         TagValue("marketCapAbove1e6", market_cap),
-        TagValue("impVolatOverHistAbove", iv_over_hv),
-        TagValue("ivPercntl13wAbove", iv_percentile)
+        TagValue("impVolatAbove", implied_vol)
+        # TagValue("impVolatOverHistAbove", iv_over_hv),
+        # TagValue("ivPercntl13wAbove", iv_percentile)
         ]
 
     app.reqScannerSubscription(app.nextorderId, sub, scan_options, filter_options)
