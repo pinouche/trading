@@ -54,9 +54,12 @@ def main() -> IBapi:
     # Get the list of stocks we are interested in
     stock_list = config_vars["stocks"]
     buffer_allowed_pennies = config_vars["buffer_allowed_pennies"]
-    # request scanner and get stocks with iv/hv >= 100% and iv_percentile >= 80%
-    request_scanner(appl)
+
+    # request scanner and get stocks with iv >= 70%
+    implied_vol = max(70.0, float(config_vars["minimum_volatility"]))
+    request_scanner(appl, implied_vol=str(implied_vol))
     scanner_stocks = get_scanner_ticker_list(appl)
+
     logger.info(f"Stocks from Scanner are: {scanner_stocks}. Stocks from list are: {stock_list}.")
     stock_list = [stock for stock in stock_list if stock in scanner_stocks]
 
