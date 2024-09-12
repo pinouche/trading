@@ -10,7 +10,7 @@ cash_to_trade: 1000
 number_of_options: 1
 
 start_time_after_nine: 45
-minimum_volatility: "70"
+minimum_volatility: "0.04" # daily iv (over business days)
 
 buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30

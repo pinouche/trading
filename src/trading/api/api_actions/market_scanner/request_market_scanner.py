@@ -20,7 +20,7 @@ def request_scanner(app: IBapi,
     sub = ScannerSubscription()
     sub.instrument = "STK"
     sub.locationCode = "STK.US.MAJOR"
-    sub.scanCode = "HIGH_OPT_IMP_VOLAT"
+    sub.scanCode = "MOST_ACTIVE"
 
     scan_options: list = []
     filter_options = [

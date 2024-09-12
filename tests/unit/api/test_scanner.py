@@ -11,7 +11,7 @@ from trading.api.ibapi_class import IBapi
 @pytest.mark.parametrize(
     ("market_cap", "implied_vol", "expected_data_bool"),
     [
-        ("100000", "1", True),  # 100 billion market cap
+        ("100000", "0.01", True),  # 100 billion market cap, implied vol is the daily iv (over business days)
         ("10000000", None, False)  # 10 trillion
     ])
 def test_request_scanner(app: IBapi, market_cap: str, implied_vol: str | None, expected_data_bool: bool) -> None:
