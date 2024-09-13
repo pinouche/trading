@@ -65,6 +65,7 @@ def main() -> IBapi:
 
     if config_vars["strategy"] == "use_wsb" and not stock_list:  # only if we want to use wsb and stock list is empty
         stock_list = scrape_top_trending_wsb_ticker()
+        stock_list = [stock for stock in stock_list if stock not in config_vars["wsb_to_exclude"]]
         logger.info(f"We are going to use WSB stocks {stock_list}")
         if stock_list is None:
             raise ValueError("We are using WSB ticker but we got None.")
