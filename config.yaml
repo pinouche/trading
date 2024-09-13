@@ -4,6 +4,10 @@ stocks:
   - AMD
   - ARM
 
+wsb_to_exclude:
+  - BY
+  - CMCT
+
 green_color: "#417505"
 
 cash_to_trade: 1000
