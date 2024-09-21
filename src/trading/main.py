@@ -56,7 +56,7 @@ def main() -> IBapi:
     buffer_allowed_pennies = config_vars["buffer_allowed_pennies"]
 
     # request scanner and get stocks with iv >= 70%
-    implied_vol = max(70/np.sqrt(252), float(config_vars["minimum_volatility"]))
+    implied_vol = float(config_vars["minimum_volatility"])/np.sqrt(252)
     request_scanner(appl, implied_vol=str(implied_vol))
     scanner_stocks = get_scanner_ticker_list(appl)
 
