@@ -7,6 +7,7 @@ stocks:
 wsb_to_exclude:
   - BY
   - CMCT
+  - BB
 
 green_color: "#417505"
 
