@@ -64,8 +64,11 @@ def main() -> IBapi:
     stock_list = [stock for stock in stock_list if stock in scanner_stocks]
 
     if config_vars["strategy"] == "use_wsb" and not stock_list:  # only if we want to use wsb and stock list is empty
-        stock_list = scrape_top_trending_wsb_ticker()
-        stock_list = [stock for stock in stock_list if stock not in config_vars["wsb_to_exclude"]]
+        if config_vars["scraping_wsb"]:
+            stock_list = scrape_top_trending_wsb_ticker()
+            stock_list = [stock for stock in stock_list if stock not in config_vars["wsb_to_exclude"]]
+        else:
+            stock_list = config_vars["wsb_to_include"]
         logger.info(f"We are going to use WSB stocks {stock_list}")
         if stock_list is None:
             raise ValueError("We are using WSB ticker but we got None.")
@@ -136,8 +139,6 @@ def main() -> IBapi:
         bool_status = wait_until_order_is_filled(appl, config_vars["waiting_time_to_readjust_order"])
 
     appl.nextorderId += 1  # type: ignore
-
-    logger.info("It does not wait to see whether or not it is finished!!")
 
     # get the stock contract for the above ticker
     stock_contract = get_stock_contract(ticker=stock_ticker)

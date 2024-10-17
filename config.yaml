@@ -4,6 +4,11 @@ stocks:
   - AMD
   - ARM
 
+wsb_to_include: # to change weekly manually
+  - NVDA
+  - TSMC
+  - RKLB
+
 wsb_to_exclude:
   - BY
   - CMCT
@@ -19,4 +24,6 @@ minimum_volatility: "65" # annual
 
 buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30
+
 strategy: "use_wsb"
+scraping_wsb: false
