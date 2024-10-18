@@ -2,13 +2,17 @@
 
 from datetime import datetime, timedelta
 
-import yaml  # type: ignore
+import yaml
+
+from trading.core.data_models.data_models import ConfigModel
 
 
-def config_load(PATH: str) -> dict:
-    """load config file into a dict"""
-    with open(PATH) as f:
-        return dict(yaml.safe_load(f))
+def config_load(file_path: str) -> ConfigModel:
+    """load config file into pydantic object"""
+    with open(file_path) as file:
+        config_data = yaml.safe_load(file)
+
+    return ConfigModel(**config_data)
 
 
 def get_next_friday() -> str:

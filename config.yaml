@@ -1,3 +1,8 @@
+client_config:
+  ip_address: "127.0.0.1"
+  port: 7497
+  client_id: 1
+
 stocks:
   - TSLA
   - NVDA

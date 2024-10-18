@@ -22,9 +22,9 @@ def place_simple_order(app: IBapi, contract: Contract, action: str, price: float
     quantity: int (number of shares)
     """
     if action == "BUY":
-        price += config_vars["buffer_allowed_pennies"]
+        price += config_vars.buffer_allowed_pennies
     elif action == "SELL":
-        price -= config_vars["buffer_allowed_pennies"]
+        price -= config_vars.buffer_allowed_pennies
     else:
         raise ValueError(f"Valid actions are [BUY, SELL], got {action}.")
 
@@ -62,8 +62,8 @@ def place_conditional_parent_child_orders(app: IBapi,
     parent_price_condition = create_price_condition(contract_details, False, strike_price)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "SELL",
-                                       round(strike_price - config_vars["buffer_allowed_pennies"], 2),
-                                       config_vars["number_of_options"] * 100,
+                                       round(strike_price - config_vars.buffer_allowed_pennies, 2),
+                                       config_vars.number_of_options * 100,
                                        False)
     parent_order.conditions.append(parent_price_condition)
     parent_order.transmit = False
@@ -73,8 +73,8 @@ def place_conditional_parent_child_orders(app: IBapi,
     child_order = create_child_order(app.nextorderId,  # type: ignore
                                      app.nextorderId + 1,  # type: ignore
                                      "BUY",
-                                     round(purchase_price + config_vars["buffer_allowed_pennies"], 2),
-                                     config_vars["number_of_options"] * 100,
+                                     round(purchase_price + config_vars.buffer_allowed_pennies, 2),
+                                     config_vars.number_of_options * 100,
                                      False)
     child_order.conditions.append(child_price_condition)
     child_order.transmit = True
