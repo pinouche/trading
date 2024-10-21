@@ -3,9 +3,9 @@ repos:
     rev: v4.4.0
     hooks:
       - id: trailing-whitespace
-        exclude_types: [ jupyter ]
+        exclude_types: [jupyter]
       - id: end-of-file-fixer
-        exclude_types: [ jupyter ]
+        exclude_types: [jupyter]
       - id: check-docstring-first
       - id: debug-statements
       - id: check-ast
@@ -18,14 +18,16 @@ repos:
     rev: v1.0.1
     hooks:
       - id: mypy
-        args: [
-          --python-version=3.10,
-          --disallow-untyped-calls,
-          --disallow-untyped-defs,
-          --disallow-incomplete-defs,
-          --check-untyped-defs,
-          --no-implicit-optional,
-          --warn-redundant-casts,
-          --ignore-missing-imports,
-        ]
-        exclude_types: [ jupyter ]
+        args:
+          [
+            --python-version=3.10,
+            --disallow-untyped-calls,
+            --disallow-untyped-defs,
+            --disallow-incomplete-defs,
+            --check-untyped-defs,
+            --no-implicit-optional,
+            --warn-redundant-casts,
+            --ignore-missing-imports,
+          ]
+        exclude_types: [jupyter]
+        additional_dependencies: ["types-requests", "types-PyYAML"]

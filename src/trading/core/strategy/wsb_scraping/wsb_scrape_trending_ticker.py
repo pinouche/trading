@@ -5,10 +5,6 @@ from heapq import nlargest
 import requests  # type: ignore
 from bs4 import BeautifulSoup
 
-from trading.utils import config_load
-
-config_vars = config_load("./config.yaml")
-
 
 def get_html() -> str:
     """Scrape the HTML to get a list of tickers."""

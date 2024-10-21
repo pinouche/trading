@@ -48,6 +48,7 @@ def process_in_parallel(process_function: Callable[..., tuple[str, Any]], stock_
     """Process a list of stock tickers in parallel using a specified processing function."""
     dict_result = {}
 
+    # TODO (@dhcsousa): Check if this is working.
     with ThreadPoolExecutor() as executor:
         futures = {executor.submit(process_function, stock_ticker, app, expiry_date): stock_ticker for stock_ticker in stock_list}
 

@@ -6,9 +6,6 @@ from ibapi.scanner import ScannerSubscription
 from ibapi.tag_value import TagValue
 
 from trading.api.ibapi_class import IBapi
-from trading.utils import config_load
-
-config_vars = config_load("./config.yaml")
 
 
 def request_scanner(app: IBapi,

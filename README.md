@@ -15,6 +15,16 @@ To run test using pytest, simply run:
 
 `pytest -sv`
 
+## Setting up TW
+
+First install and login onto the Trader Workstation.
+
+Next you need to change your API settings by:
+
+* Enable ActiveX and Socket Clients.
+* Disable the Read-Only, i.e. the API needs to be able to place orders.
+
+
 ## Notes:
 
 # Delta Hedging strategy (when selling options)
