@@ -11,8 +11,11 @@ stocks:
 
 wsb_to_include: # to change weekly manually
   - NVDA
-  - TSMC
-  - RKLB
+  - TSLA
+  - LUNR
+  - DJT
+  - PLTR
+  - ASTS
 
 wsb_to_exclude:
   - BY
