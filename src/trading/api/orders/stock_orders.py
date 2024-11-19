@@ -19,6 +19,8 @@ def create_parent_order(order_id: int, action: str, price: float, quantity: int,
     order.lmtPrice = price
     order.allOrNone = all_or_none
     order.outsideRth = outside_hours
+    order.eTradeOnly = False
+    order.firmQuoteOnly = False
 
     return order
 
