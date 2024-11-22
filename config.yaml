@@ -6,8 +6,7 @@ client_config:
 stocks:
   - TSLA
   - NVDA
-  - AMD
-  - ARM
+
 
 wsb_to_include: # to change weekly manually
   - NVDA
@@ -33,5 +32,5 @@ minimum_volatility: "65" # annual
 buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30
 
-strategy: "use_wsb"
+use_wsb: false
 scraping_wsb: false

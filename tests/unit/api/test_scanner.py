@@ -25,6 +25,7 @@ def test_request_scanner(app: IBapi, market_cap: str, implied_vol: str | None, e
     request_scanner(app, market_cap=market_cap, implied_vol=implied_vol)
 
     dictionary_data = app.scanner_data
+
     if expected_data_bool:
         assert len(dictionary_data) > 0
     else:
