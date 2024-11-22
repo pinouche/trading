@@ -7,7 +7,6 @@ stocks:
   - TSLA
   - NVDA
 
-
 wsb_to_include: # to change weekly manually
   - NVDA
   - TSLA
@@ -15,13 +14,6 @@ wsb_to_include: # to change weekly manually
   - DJT
   - PLTR
   - ASTS
-
-wsb_to_exclude:
-  - BY
-  - CMCT
-  - BB
-
-green_color: "#417505"
 
 cash_to_trade: 1000
 number_of_options: 1
