@@ -6,7 +6,7 @@ client_config:
 stocks:
   - TSLA
   - NVDA
-
+  - ARM
 
 wsb_to_include: # to change weekly manually
   - NVDA
@@ -16,15 +16,9 @@ wsb_to_include: # to change weekly manually
   - PLTR
   - ASTS
 
-wsb_to_exclude:
-  - BY
-  - CMCT
-  - BB
-
-green_color: "#417505"
-
-cash_to_trade: 1000
-number_of_options: 1
+todays_date: '20241122'  # we must change this to run the program
+cash_to_trade: 35000
+number_of_options: -1
 
 start_time_after_nine: 45
 minimum_volatility: "65" # annual
@@ -33,4 +27,3 @@ buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30
 
 use_wsb: false
-scraping_wsb: false
