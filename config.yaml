@@ -16,8 +16,8 @@ wsb_to_include: # to change weekly manually
   - ASTS
 
 todays_date: '20241122'  # we must change this to run the program
-cash_to_trade: 1000
-number_of_options: 1
+cash_to_trade: 35000
+number_of_options: -1
 
 start_time_after_nine: 45
 minimum_volatility: "65" # annual

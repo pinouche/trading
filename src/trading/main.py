@@ -81,7 +81,7 @@ def main() -> IBapi:
         stock_list = config_vars.stocks
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
-    assert config_vars.todays_date == expiry_date
+    assert config_vars.todays_date == expiry_date, f"date in config {config_vars.todays_date} does not match today's date!"
 
     # The strategy works on 0DTE options, and we want to run it after 10 am.
     if datetime.datetime.today().weekday() != 4:
