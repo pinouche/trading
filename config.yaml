@@ -6,6 +6,7 @@ client_config:
 stocks:
   - TSLA
   - NVDA
+  - ARM
 
 wsb_to_include: # to change weekly manually
   - NVDA
@@ -26,4 +27,3 @@ buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30
 
 use_wsb: false
-scraping_wsb: false

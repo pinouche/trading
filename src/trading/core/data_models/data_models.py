@@ -19,8 +19,6 @@ class ConfigModel(BaseModel):
     client_config: ClientModel
     stocks: list[str]
     wsb_to_include: list[str]
-    wsb_to_exclude: list[str]
-    green_color: str
     todays_date: str
     cash_to_trade: Annotated[float, Field(gt=0)]  # float, needs to be bigger then 0
     number_of_options: Annotated[
@@ -33,7 +31,6 @@ class ConfigModel(BaseModel):
     buffer_allowed_pennies: float
     waiting_time_to_readjust_order: int
     use_wsb: bool
-    scraping_wsb: bool
 
 
 class StockInfo(BaseModel):

@@ -30,11 +30,14 @@ Next you need to change your API settings by:
 # Delta Hedging strategy (when selling options)
 
 * If I sell 0DTE, I remove the overnight risk.
-* The stocks I am considering are: ["TSLA", "NVDA", "AMD", "ARM"] (maybe add more stocks in the future)
+* The stocks I am considering are: ["TSLA", "NVDA", "ARM"] (maybe add more stocks in the future)
 * I first sell an ITM covered call option, and then perform simple dynamic delta-hedging. It outperforms covered and naked.
 * It is best to do this on high iv/hist iv.
 
-# TODO (WSB)
+# Important
 
-* Back test that this chosen stock would perform well.
-* Take a couple of stocks from WSB instead of most popular (top 2 most popular) and run the same score computation.
+Before running the program, two things must be done:
+
+1) Change 'todays_date' variable to today's date in yyyymmdd format
+2) Make sure that the 'cash_to_trade' variable is larger than 100*stock_price for the most expensive stock in 'stocks' list.
+If this is not the case, it will throw an error: 'not enough cash to trade'.
