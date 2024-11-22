@@ -1,8 +1,5 @@
 """Fetch the options strikes for several stocks and returns the stock and strike for which the strike is closest to current price"""
 
-from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any
 
 import numpy as np
 from loguru import logger
@@ -43,27 +40,9 @@ def get_current_stock_price(app: IBapi, ticker_symbol: str) -> np.float64:
     return mid_price
 
 
-def process_in_parallel(process_function: Callable[..., tuple[str, Any]], stock_list: list,
-                        app: IBapi, expiry_date: str | None = None) -> dict[str, Any]:
-    """Process a list of stock tickers in parallel using a specified processing function."""
-    dict_result = {}
-
-    # TODO (@dhcsousa): Check if this is working.
-    with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(process_function, stock_ticker, app, expiry_date): stock_ticker for stock_ticker in stock_list}
-
-        for future in as_completed(futures):
-            stock_ticker = futures[future]
-            try:
-                result = future.result()
-                dict_result[result[0]] = result[1]
-            except (ValueError, IndexError) as e:
-                logger.error(f"{stock_ticker} generated an exception: {e}")
-
-    return dict_result
-
-
-def process_stock_ticker_iv(stock_ticker: str, app: IBapi, expiry_date: str | None = None) -> tuple[str, tuple]:
+def process_stock_ticker_iv(stock_ticker: str,
+                            app: IBapi,
+                            expiry_date: str | None = None) -> tuple[str, tuple[float, float, float]]:
     """Function to find the iv for a given stock option."""
     # get the available strike prices
     dict_options_strike_price = get_options_strikes(app, stock_ticker, expiry_date)
@@ -84,7 +63,7 @@ def process_stock_ticker_iv(stock_ticker: str, app: IBapi, expiry_date: str | No
                 f"stock price: {stock_price}, option iv is: {iv * 100}%")
     logger.info(f"current redId is {app.nextorderId}.")
 
-    return stock_ticker, (iv, percentage_diff, closest_strike_price)
+    return stock_ticker, (iv, percentage_diff, closest_strike_price)  # type: ignore
 
 
 def compute_score(dict_results: dict[str, tuple[float, float, float]], alpha_weight: float = 0.2) -> tuple[str, float]:
@@ -104,10 +83,14 @@ def compute_score(dict_results: dict[str, tuple[float, float, float]], alpha_wei
     return keys[best_index], dict_results[keys[best_index]][-1]
 
 
-def get_strike_for_max_parameter(app: IBapi, func: Callable, stock_list: list, expiry_date: str | None = None,
+def get_strike_for_max_parameter(app: IBapi, stock_list: list, expiry_date: str | None = None,
                                  ) -> tuple[str, float]:
     """Return the stock and the associated strike price with the highest implied volatility."""
-    dict_result = process_in_parallel(func, stock_list, app, expiry_date)
+    dict_result = {}
+    for ticker in stock_list:
+        stock_ticker, tup_result = process_stock_ticker_iv(ticker, app, expiry_date)
+        dict_result[ticker] = tup_result
+
     ticker_symbol, strike_price = compute_score(dict_result)
 
     return ticker_symbol, strike_price

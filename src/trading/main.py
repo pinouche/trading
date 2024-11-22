@@ -27,12 +27,11 @@ from trading.api.ibapi_class import IBapi
 from trading.api.orders.option_orders import create_parent_order
 from trading.core.strategy.get_strike_and_stock import (
     get_strike_for_max_parameter,
-    process_stock_ticker_iv,
 )
 from trading.core.strategy.wsb_scraping.wsb_scrape_trending_ticker import (
     scrape_top_trending_wsb_ticker,
 )
-from trading.utils import config_load, get_next_friday
+from trading.utils import config_load
 
 config_vars = config_load("./config.yaml")
 
@@ -76,7 +75,7 @@ def main() -> IBapi:
     )
     stock_list = [stock for stock in stock_list if stock in scanner_stocks]
 
-    if config_vars.strategy == "use_wsb" and not stock_list:  # only if we want to use wsb and stock list is empty
+    if config_vars.use_wsb and not stock_list:  # only if we want to use wsb and stock list is empty
         if config_vars.scraping_wsb:
             stock_list = scrape_top_trending_wsb_ticker() or []
             stock_list = [stock for stock in stock_list if stock not in config_vars.wsb_to_exclude]
@@ -85,15 +84,17 @@ def main() -> IBapi:
         logger.info(f"We are going to use WSB stocks {stock_list}")
         if stock_list is None:
             raise ValueError("We are using WSB ticker but we got None.")
+    elif not config_vars.use_wsb and not stock_list:  # if we do not use wsb and the list is empty, revert back to the original list
+        stock_list = config_vars.stocks
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
 
     # The strategy works on 0DTE options, and we want to run it after 10 am.
     if datetime.datetime.today().weekday() != 4:
-        expiry_date = get_next_friday()
-        #raise ValueError(
-        #    "Today is not a Friday, cannot run the delta hedging strategy!"
-        #)
+        # expiry_date = get_next_friday()
+        raise ValueError(
+            "Today is not a Friday, cannot run the delta hedging strategy!"
+        )
     else:
         minutes_after_nine = config_vars.start_time_after_nine
         cet = pytz.timezone("CET")
@@ -111,7 +112,7 @@ def main() -> IBapi:
     logger.info("Start the parallel computing...")
     # Here, we could use several defined strategies
     stock_ticker, strike_price = get_strike_for_max_parameter(
-        appl, process_stock_ticker_iv, stock_list, expiry_date
+        appl, stock_list, expiry_date
     )
 
     appl.nextorderId += 1  # type: ignore
@@ -137,7 +138,7 @@ def main() -> IBapi:
         if number_of_options == 0:
             raise ValueError(
                 f"Not enough cash available to trade stock {stock_ticker}. I have {config_vars.cash_to_trade},"
-                f"need at least {stock_price*100}."
+                f"need at least {stock_price * 100}."
             )
 
     # define option contract and request data for it.

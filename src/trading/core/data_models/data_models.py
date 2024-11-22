@@ -31,7 +31,7 @@ class ConfigModel(BaseModel):
     minimum_volatility: str
     buffer_allowed_pennies: float
     waiting_time_to_readjust_order: int
-    strategy: str
+    use_wsb: bool
     scraping_wsb: bool
 
 
