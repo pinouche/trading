@@ -21,6 +21,7 @@ class ConfigModel(BaseModel):
     wsb_to_include: list[str]
     wsb_to_exclude: list[str]
     green_color: str
+    todays_date: str
     cash_to_trade: Annotated[float, Field(gt=0)]  # float, needs to be bigger then 0
     number_of_options: Annotated[
         int, Field(ge=0)

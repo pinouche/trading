@@ -15,6 +15,7 @@ wsb_to_include: # to change weekly manually
   - PLTR
   - ASTS
 
+todays_date: '20241122'  # we must change this to run the program
 cash_to_trade: 1000
 number_of_options: 1
 

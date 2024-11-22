@@ -28,9 +28,6 @@ from trading.api.orders.option_orders import create_parent_order
 from trading.core.strategy.get_strike_and_stock import (
     get_strike_for_max_parameter,
 )
-from trading.core.strategy.wsb_scraping.wsb_scrape_trending_ticker import (
-    scrape_top_trending_wsb_ticker,
-)
 from trading.utils import config_load
 
 config_vars = config_load("./config.yaml")
@@ -76,7 +73,7 @@ def main() -> IBapi:
     stock_list = [stock for stock in stock_list if stock in scanner_stocks]
 
     if config_vars.use_wsb and not stock_list:  # only if we want to use wsb and stock list is empty
-        stock_list = scrape_top_trending_wsb_ticker() or [] if config_vars.scraping_wsb else config_vars.wsb_to_include
+        stock_list = config_vars.wsb_to_include
         logger.info(f"We are going to use WSB stocks {stock_list}")
         if stock_list is None:
             raise ValueError("We are using WSB ticker but we got None.")
@@ -84,6 +81,7 @@ def main() -> IBapi:
         stock_list = config_vars.stocks
 
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
+    assert config_vars.todays_date == expiry_date
 
     # The strategy works on 0DTE options, and we want to run it after 10 am.
     if datetime.datetime.today().weekday() != 4:
