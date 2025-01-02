@@ -36,5 +36,5 @@ class ConfigModel(BaseModel):
 class StockInfo(BaseModel):
     """Stock card with defined attributes"""
 
-    price: list[list] = []
+    price: list[list] = Field(default_factory=list)
     market_is_live: bool = False

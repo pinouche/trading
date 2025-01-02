@@ -62,7 +62,7 @@ def main() -> IBapi:
     stock_list = config_vars.stocks
     buffer_allowed_pennies = config_vars.buffer_allowed_pennies
 
-    # request scanner and get stocks with iv >= 70%
+    # request scanner and get stocks with iv >= config_vars.minimum_volatility%
     implied_vol = float(config_vars.minimum_volatility) / np.sqrt(252)
     request_scanner(appl, implied_vol=str(implied_vol))
     scanner_stocks = get_scanner_ticker_list(appl)
@@ -147,16 +147,16 @@ def main() -> IBapi:
     while not bool_status:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, option_contract)
-        mid_price = np.round(np.mean(price_list), 2)
-        if mid_price < price_list[0]:
-            mid_price = price_list[0]
+        premium = np.round(np.mean(price_list), 2)
+        if premium < price_list[0]:
+            premium = price_list[0]
 
-        if strike_price + mid_price <= stock_price:
+        if strike_price + premium <= stock_price:
             raise ValueError("strike price + premium <= stock price!!")
 
         # create an option sell order and fire it
         order = create_parent_order(
-            appl.nextorderId, "SELL", mid_price, number_of_options, False
+            appl.nextorderId, "SELL", premium, number_of_options, False
         )  # type: ignore[arg-type]
 
         place_option_order(appl, option_contract, order)
@@ -190,7 +190,7 @@ def main() -> IBapi:
     appl.nextorderId += 1  # type: ignore
 
     # place a parent sell order if condition is reached with an attached child buy conditional order.
-    place_conditional_parent_child_orders(appl, stock_contract, strike_price, mid_price)
+    place_conditional_parent_child_orders(appl, stock_contract, strike_price, premium)
 
     return appl
 
