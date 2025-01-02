@@ -5,9 +5,9 @@ client_config:
 
 stocks:
   - TSLA
-#  - NVDA
-#  - ARM
-#  - PLTR
+  - NVDA
+  - ARM
+  - PLTR
 
 wsb_to_include: # to change weekly manually
   - NVDA
