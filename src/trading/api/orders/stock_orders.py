@@ -43,5 +43,7 @@ def create_child_order(parent_order_id: int, child_order_id: int,
     order.lmtPrice = price
     order.allOrNone = all_or_none
     order.outsideRth = outside_hours
+    order.eTradeOnly = False
+    order.firmQuoteOnly = False
 
     return order

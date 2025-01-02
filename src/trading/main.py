@@ -28,7 +28,7 @@ from trading.api.orders.option_orders import create_parent_order
 from trading.core.strategy.get_strike_and_stock import (
     get_strike_for_max_parameter,
 )
-from trading.utils import config_load
+from trading.utils import config_load, get_next_friday
 
 config_vars = config_load("./config.yaml")
 
@@ -85,23 +85,26 @@ def main() -> IBapi:
 
     # The strategy works on 0DTE options, and we want to run it after 10 am.
     if datetime.datetime.today().weekday() != 4:
-        # expiry_date = get_next_friday()
-        raise ValueError(
-            "Today is not a Friday, cannot run the delta hedging strategy!"
-        )
-    else:
-        minutes_after_nine = config_vars.start_time_after_nine
-        cet = pytz.timezone("CET")
-        current_time_cet = datetime.datetime.now(cet)
-        ten_am_cet = cet.localize(
-            datetime.datetime.combine(
-                current_time_cet, datetime.time(9, minutes_after_nine)
-            )
-        )
-        if current_time_cet < ten_am_cet:
+        if config_vars.test_mode:
+            expiry_date = get_next_friday()
+        else:
             raise ValueError(
-                "Today is Friday, but we do not want to run the strategy before 10 am!"
+                "Today is not a Friday, cannot run the delta hedging strategy!"
             )
+
+    minutes_after_nine = config_vars.start_time_after_nine
+    cet = pytz.timezone("CET")
+    current_time_cet = datetime.datetime.now(cet)
+    ten_am_cet = cet.localize(
+        datetime.datetime.combine(
+            current_time_cet, datetime.time(9, minutes_after_nine)
+        )
+    )
+    # we want the program to execute only after the time set in the config file, unless we are in test mode
+    if current_time_cet < ten_am_cet and not config_vars.test_mode:
+        raise ValueError(
+            "Today is Friday, but we do not want to run the strategy before 10 am!"
+        )
 
     logger.info("Start the parallel computing...")
     # Here, we could use several defined strategies
@@ -127,7 +130,7 @@ def main() -> IBapi:
         buffer_allowed_pennies = 0.01
 
     number_of_options = config_vars.number_of_options
-    if number_of_options == -1:
+    if number_of_options == 0:
         number_of_options = int(config_vars.cash_to_trade / (stock_price * 100))
         if number_of_options == 0:
             raise ValueError(
@@ -144,10 +147,11 @@ def main() -> IBapi:
     )
 
     bool_status = False
+    premium: float = 0
     while not bool_status:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, option_contract)
-        premium = np.round(np.mean(price_list), 2)
+        premium = float(np.round(np.mean(price_list), 2))
         if premium < price_list[0]:
             premium = price_list[0]
 
@@ -189,12 +193,24 @@ def main() -> IBapi:
     _ = wait_until_order_is_filled(appl)
     appl.nextorderId += 1  # type: ignore
 
+    logger.info("We are now placing the conditional order")
+    print("We are now placing the conditional order")
+
     # place a parent sell order if condition is reached with an attached child buy conditional order.
-    place_conditional_parent_child_orders(appl, stock_contract, strike_price, premium)
+    place_conditional_parent_child_orders(appl, stock_contract, strike_price, premium, number_of_options)
 
     return appl
 
 
 if __name__ == "__main__":
+
+    logger.info(f"Currently running in test_mode={config_vars.test_mode}. Make sure this variable is "
+                f"set to False for a real run!")
+
+    response = input("Continue execution? (y/n): ")
+    if response.lower() != 'y':
+        print("Execution aborted")
+        exit()
+
     app = main()
     app.disconnect()
