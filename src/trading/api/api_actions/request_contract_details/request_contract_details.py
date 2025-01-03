@@ -23,13 +23,14 @@ def get_contract_details(app: IBapi, contract: Contract) -> list | Any:
         ticker_symbol = contract.symbol
         while ticker_symbol not in app.options_strike_price_dict:
             time.sleep(0.1)
+        # this loop makes sure that we get all the strike prices for the available option
         while True:
             if app.options_strike_price_dict[ticker_symbol]:
                 if len(app.options_strike_price_dict[ticker_symbol]) > current_strike_list_len:
                     current_strike_list_len = len(app.options_strike_price_dict[ticker_symbol])
                 else:
                     break
-            time.sleep(0.2)
+            time.sleep(0.5)
 
         return app.options_strike_price_dict[ticker_symbol]
 

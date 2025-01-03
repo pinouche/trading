@@ -123,6 +123,12 @@ def main() -> IBapi:
     bid_price, ask_price = price_list[-2], price_list[-1]
     stock_price = np.round((ask_price + bid_price) / 2, 2)
 
+    # here, we have a safeguard to make sure that the strike price is not too far from the stock price
+    prem_to_price_diff = 100*(stock_price-strike_price)/strike_price
+    if prem_to_price_diff > 1.5:
+        raise ValueError(f"The difference between the strike price and the stock price: {prem_to_price_diff} "
+                         f"is greater than 1.5%")
+
     appl.nextorderId += 1
 
     # dynamically set buffer_allowed_pennies (if it is bigger than 0.5% of the stock price, reduce it to 1 cent)
@@ -152,8 +158,6 @@ def main() -> IBapi:
         # request the price list and compute the mid-point for the option price (ask+bid)/2
         price_list = request_market_data_price(appl, option_contract)
         premium = float(np.round(np.mean(price_list), 2))
-        if premium < price_list[0]:
-            premium = price_list[0]
 
         if strike_price + premium <= stock_price:
             raise ValueError("strike price + premium <= stock price!!")

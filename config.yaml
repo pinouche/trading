@@ -16,9 +16,9 @@ wsb_to_include: # to change weekly manually
   - PLTR
   - ASTS
 
-todays_date: '20250102'  # we must change this to run the program ('yyyymmdd')
+todays_date: '20250103'  # we must change this to run the program ('yyyymmdd')
 cash_to_trade: 60000
-number_of_options: 1
+number_of_options: 0
 
 start_time_after_nine: 59
 minimum_volatility: "60" # annual
