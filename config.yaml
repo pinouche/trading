@@ -7,23 +7,25 @@ stocks:
   - TSLA
   - NVDA
   - ARM
+  - PLTR
 
 wsb_to_include: # to change weekly manually
   - NVDA
   - TSLA
   - LUNR
-  - DJT
   - PLTR
   - ASTS
 
-todays_date: '20241122'  # we must change this to run the program
-cash_to_trade: 35000
-number_of_options: -1
+todays_date: '20250103'  # we must change this to run the program ('yyyymmdd')
+cash_to_trade: 60000
+number_of_options: 0
 
-start_time_after_nine: 45
-minimum_volatility: "65" # annual
+start_time_after_nine: 59
+minimum_volatility: "60" # annual
 
 buffer_allowed_pennies: 0.05
 waiting_time_to_readjust_order: 30
 
-use_wsb: false
+use_wsb: false # set to true to use the WSB list defined above
+
+test_mode: true  # set to true for the code to run also if today is not friday

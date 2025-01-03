@@ -31,10 +31,11 @@ class ConfigModel(BaseModel):
     buffer_allowed_pennies: float
     waiting_time_to_readjust_order: int
     use_wsb: bool
+    test_mode: bool
 
 
 class StockInfo(BaseModel):
     """Stock card with defined attributes"""
 
-    price: list[list] = []
+    price: list[list] = Field(default_factory=list)
     market_is_live: bool = False
