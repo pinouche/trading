@@ -3,11 +3,14 @@ client_config:
   port: 7497
   client_id: 0
 
-stocks:
-  - TSLA
+stocks: # include stocks that are on the WSB list of trending but still mainstream ones
+  - AMD
   - NVDA
   - ARM
-  - PLTR
+  - GOOG
+  - AAPL
+  - AMZN
+  - META
 
 wsb_to_include: # to change weekly manually
   - NVDA
@@ -16,7 +19,7 @@ wsb_to_include: # to change weekly manually
   - PLTR
   - ASTS
 
-todays_date: '20250103'  # we must change this to run the program ('yyyymmdd')
+todays_date: '20250221'  # we must change this to run the program ('yyyymmdd')
 cash_to_trade: 60000
 number_of_options: 0
 
@@ -28,4 +31,4 @@ waiting_time_to_readjust_order: 30
 
 use_wsb: false # set to true to use the WSB list defined above
 
-test_mode: true  # set to true for the code to run also if today is not friday
+test_mode: false  # set to true for the code to run also if today is not friday

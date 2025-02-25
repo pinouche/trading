@@ -125,9 +125,9 @@ def main() -> IBapi:
 
     # here, we have a safeguard to make sure that the strike price is not too far from the stock price
     prem_to_price_diff = 100*(stock_price-strike_price)/strike_price
-    if prem_to_price_diff > 1.5:
+    if prem_to_price_diff > 2.0:
         raise ValueError(f"The difference between the strike price and the stock price: {prem_to_price_diff} "
-                         f"is greater than 1.5%")
+                         f"is greater than 2%")
 
     appl.nextorderId += 1
 
