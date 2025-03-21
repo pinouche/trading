@@ -7,6 +7,7 @@ stocks: # include stocks that are on the WSB list of trending but still mainstre
   - GOOG
   - AAPL
   - AMZN
+  - AMD
 
 wsb_to_include: # to change weekly manually
   - NVDA
