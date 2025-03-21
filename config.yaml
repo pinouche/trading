@@ -4,13 +4,9 @@ client_config:
   client_id: 0
 
 stocks: # include stocks that are on the WSB list of trending but still mainstream ones
-  - AMD
-  - NVDA
-  - ARM
   - GOOG
   - AAPL
   - AMZN
-  - META
 
 wsb_to_include: # to change weekly manually
   - NVDA
@@ -19,7 +15,7 @@ wsb_to_include: # to change weekly manually
   - PLTR
   - ASTS
 
-todays_date: '20250221'  # we must change this to run the program ('yyyymmdd')
+todays_date: '20250321'  # we must change this to run the program ('yyyymmdd')
 cash_to_trade: 60000
 number_of_options: 0
 
