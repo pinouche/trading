@@ -8,7 +8,6 @@ def app_connection(appl: IBapi) -> None:
     assert appl.isConnected() is True
     assert appl.connState == 2
 
-
 def data_is_live(appl: IBapi) -> None:
     request_market_data_price_stock(appl, "TSLA")
     assert appl.current_asset_price_dict[appl.nextorderId].market_is_live is True  # type: ignore
