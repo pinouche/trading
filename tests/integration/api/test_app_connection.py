@@ -25,7 +25,6 @@ def app_connection(appl: IBapi) -> None:
 
 def data_is_live(appl: IBapi) -> None:
     request_market_data_price_stock(appl, "TSLA")
-    print("THIS IS THE DICT", appl.current_asset_price_dict)
     assert appl.current_asset_price_dict[appl.nextorderId].market_is_live is True  # type: ignore
     assert isinstance(appl.current_asset_price_dict[appl.nextorderId].price, list)  # type: ignore
     assert len(appl.current_asset_price_dict[appl.nextorderId].price[-1]) == 2  # type: ignore

@@ -28,4 +28,4 @@ waiting_time_to_readjust_order: 30
 
 use_wsb: false # set to true to use the WSB list defined above
 
-test_mode: false  # set to true for the code to run also if today is not friday
+test_mode: true  # set to true for the code to run also if today is not friday

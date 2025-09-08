@@ -83,7 +83,7 @@ def main() -> IBapi:
     expiry_date = datetime.datetime.today().strftime("%Y%m%d")
     assert config_vars.todays_date == expiry_date, f"date in config {config_vars.todays_date} does not match today's date!"
 
-    # The strategy works on 0DTE options, and we want to run it after 10 am.
+    # The strategy works on 0DTE options, and we want to run it after 10 am and on Fridays.
     if datetime.datetime.today().weekday() != 4:
         if config_vars.test_mode:
             expiry_date = get_next_friday()

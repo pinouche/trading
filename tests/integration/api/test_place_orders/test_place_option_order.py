@@ -6,7 +6,6 @@ from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 from trading.api.orders.option_orders import create_parent_order
-from trading.core.strategy.get_strike_and_stock import compute_closest_percentage
 from trading.utils import get_next_friday
 
 
@@ -19,10 +18,10 @@ def test_place_order_options_contract(app: IBapi, options_strikes: list[float]) 
     app.nextorderId += 1  # type: ignore
 
     # get the available strike prices for the option contract
-    closest_itm_strike, _ = compute_closest_percentage(options_strikes, mid_price)
+    closest_strike_price = options_strikes[np.argmin(np.abs(mid_price-np.array(options_strikes)))]
 
     # get the price of the options for given strike price
-    option_contract = get_options_contract(ticker=ticker_symbol, contract_strike=closest_itm_strike, expiry_date=date)
+    option_contract = get_options_contract(ticker=ticker_symbol, contract_strike=closest_strike_price, expiry_date=date)
     price_list = request_market_data_price(app, option_contract)
 
     mid_price = np.round(np.mean(price_list), 2)

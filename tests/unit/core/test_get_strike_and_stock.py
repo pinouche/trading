@@ -1,38 +1,50 @@
-"""Test function to find the closest value that is below current price."""
-
 import pytest
-from trading.core.strategy.get_strike_and_stock import compute_score
+
+from trading.core.strategy.get_strike_and_stock import get_strike_for_highest_iv
+
+# We monkeypatch process_stock_ticker_iv so we don't need IB
+def fake_process_stock_ticker_iv_factory(results):
+    """Factory that returns a fake function cycling through preset results."""
+    def fake_process_stock_ticker_iv(ticker, app, expiry_date):
+        return results[ticker]
+    return fake_process_stock_ticker_iv
 
 
 @pytest.mark.parametrize(
-    ("input_data", "alpha_weight", "expected_key", "expected_value"),
+    "stock_list, fake_results, expected",
     [
         (
-            {'AAPL': (0.3, 5.0, 10.0), 'GOOGL': (0.4, 10.0, 15.0), 'AMZN': (0.5, 2.0, 20.0)},
-            0.6,
-            'GOOGL',
-            15.0
+            ["AAPL", "MSFT", "GOOG"],
+            {
+                "AAPL": (0.25, 150.0, 155.0),
+                "MSFT": (0.40, 300.0, 310.0),
+                "GOOG": (0.35, 2800.0, 2850.0),
+            },
+            ("MSFT", 0.40, 300.0, 310.0),
         ),
         (
-            {'MSFT': (0.1, 7.0, 5.0), 'TSLA': (0.2, 4.0, 12.0), 'NFLX': (0.15, 3.0, 7.0)},
-            0.7,
-            'MSFT',
-            5.0
+            ["TSLA", "NFLX"],
+            {
+                "TSLA": (0.55, 700.0, 710.0),
+                "NFLX": (0.55, 500.0, 510.0),  # tie → should return first seen (TSLA)
+            },
+            ("TSLA", 0.55, 700.0, 710.0),
         ),
         (
-            {'FB': (0.35, 6.0, 9.0), 'NVDA': (0.25, 8.0, 14.0), 'AMD': (0.4, 5.0, 13.0)},
-            0.5,
-            'NVDA',
-            14.0
+            ["AMZN"],
+            {
+                "AMZN": (0.20, 3300.0, 3350.0),
+            },
+            ("AMZN", 0.20, 3300.0, 3350.0),
         ),
-    ]
+    ],
 )
-def test_compute_score(input_data: dict[str, tuple[float, float, float]],
-                       alpha_weight: float,
-                       expected_key: str,
-                       expected_value: float) -> None:
+def test_get_strike_for_highest_iv(monkeypatch, stock_list, fake_results, expected):
+    # Monkeypatch process_stock_ticker_iv
+    monkeypatch.setattr(
+        "trading.core.strategy.get_strike_and_stock.process_stock_ticker_iv",
+        fake_process_stock_ticker_iv_factory(fake_results),
+    )
 
-    result_key, result_value = compute_score(input_data, alpha_weight)
-
-    assert result_key == expected_key, f"Test failed: expected key {expected_key}, got {result_key}"
-    assert result_value == expected_value, f"Test failed: expected value {expected_value}, got {result_value}"
+    result = get_strike_for_highest_iv(app=None, stock_list=stock_list, expiry_date=None)
+    assert result == expected
