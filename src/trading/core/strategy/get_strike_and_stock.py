@@ -46,6 +46,8 @@ def process_stock_ticker_iv(stock_ticker: str,
     put_strike = np.max(below_strikes)
     call_strike = np.min(above_strikes)
 
+    assert put_strike < call_strike, "put strike price should be below the call strike price."
+
     # get the corresponding put option contract and request details (we are interested in iv)
     option_contract = get_options_contract(ticker=stock_ticker,
                                            contract_strike=put_strike,

@@ -3,7 +3,6 @@
 import datetime
 import threading
 import time
-
 import numpy as np
 import pytz  # type: ignore
 from loguru import logger
@@ -22,13 +21,14 @@ from trading.api.api_actions.request_data.request_mkt_data import (
     request_market_data_price,
 )
 from trading.api.contracts.option_contracts import get_options_contract
+from trading.api.contracts.strangle_option_contracts import get_options_strangle_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 from trading.api.orders.option_orders import create_parent_order
 from trading.core.strategy.get_strike_and_stock import (
-    get_strike_for_max_parameter,
+    get_strike_for_highest_iv,
 )
-from trading.utils import config_load, get_next_friday
+from trading.utils import config_load, get_next_friday, compute_number_of_options_to_trade
 
 config_vars = config_load("./config.yaml")
 
@@ -108,13 +108,16 @@ def main() -> IBapi:
 
     logger.info("Start the parallel computing...")
     # Here, we could use several defined strategies
-    stock_ticker, strike_price = get_strike_for_max_parameter(
-        appl, stock_list, expiry_date
-    )
+    stock_ticker, iv, put_strike, call_strike = get_strike_for_highest_iv(appl,
+                                                                          stock_list,
+                                                                          expiry_date)
 
     appl.nextorderId += 1  # type: ignore
     logger.info(
-        f"The stock with the closest strike price is {stock_ticker}, and the strike price is {strike_price}."
+        f"Stock ticker: {stock_ticker}"
+        f"Implied volatility: {iv}"
+        f"Closest put strike price: {put_strike}"
+        f"Closest call strike price: {call_strike}"
     )
 
     # Get the current stock price
@@ -123,51 +126,51 @@ def main() -> IBapi:
     bid_price, ask_price = price_list[-2], price_list[-1]
     stock_price = np.round((ask_price + bid_price) / 2, 2)
 
-    # here, we have a safeguard to make sure that the strike price is not too far from the stock price
-    prem_to_price_diff = 100*(stock_price-strike_price)/strike_price
-    if prem_to_price_diff > 2.0:
-        raise ValueError(f"The difference between the strike price and the stock price: {prem_to_price_diff} "
-                         f"is greater than 2%")
-
     appl.nextorderId += 1
 
-    # dynamically set buffer_allowed_pennies (if it is bigger than 0.5% of the stock price, reduce it to 1 cent)
-    if stock_price / 200 <= buffer_allowed_pennies:
-        buffer_allowed_pennies = 0.01
-
-    number_of_options = config_vars.number_of_options
-    if number_of_options == 0:
-        number_of_options = int(config_vars.cash_to_trade / (stock_price * 100))
-        if number_of_options == 0:
-            raise ValueError(
-                f"Not enough cash available to trade stock {stock_ticker}. I have {config_vars.cash_to_trade},"
-                f"need at least {stock_price * 100}."
-            )
+    number_of_options = compute_number_of_options_to_trade(stock_ticker,
+                                                           stock_price)
 
     # define option contract and request data for it.
-    option_contract = get_options_contract(
+    call_option_contract = get_options_contract(
         ticker=stock_ticker,
-        contract_strike=strike_price,
+        contract_strike=call_strike,
         expiry_date=expiry_date,
         right="C",
     )
 
+    put_option_contract = get_options_contract(
+        ticker=stock_ticker,
+        contract_strike=put_strike,
+        expiry_date=expiry_date,
+        right="P",
+    )
+
+    # sell the strangle
     bool_status = False
     premium: float = 0
     while not bool_status:
-        # request the price list and compute the mid-point for the option price (ask+bid)/2
-        price_list = request_market_data_price(appl, option_contract)
-        premium = float(np.round(np.mean(price_list), 2))
+        # request the price list for call side and compute the mid-point for the option price (ask+bid)/2
+        call_price_list = request_market_data_price(appl, call_option_contract)
+        call_premium = float(np.round(np.mean(call_price_list), 2))
 
-        if strike_price + premium <= stock_price:
-            raise ValueError("strike price + premium <= stock price!!")
+        # request the price list for put side and compute the mid-point for the option price (ask+bid)/2
+        put_price_list = request_market_data_price(appl, call_option_contract)
+        put_premium = float(np.round(np.mean(put_price_list), 2))
+
+        assert call_premium > 0, "call premium cannot be negative!"
+        assert put_premium > 0, "put premium cannot be negative!"
+
+        strangle_contract = get_options_strangle_contract(call_option_contract,
+                                                          put_option_contract)
 
         # create an option sell order and fire it
-        order = create_parent_order(
-            appl.nextorderId, "SELL", premium, number_of_options, False
+        combo_limit_price = round(put_premium + call_premium - config_vars.buffer_allowed_pennies, 2)
+        combo_order = create_parent_order(
+            appl.nextorderId, "SELL", combo_limit_price, number_of_options, False
         )  # type: ignore[arg-type]
 
-        place_option_order(appl, option_contract, order)
+        place_option_order(appl, strangle_contract, combo_order)
         # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
         bool_status = wait_until_order_is_filled(
             appl, config_vars.waiting_time_to_readjust_order
