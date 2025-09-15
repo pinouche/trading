@@ -17,7 +17,7 @@ from trading.api.api_actions.place_orders.place_stock_orders import (
     place_simple_order,
 )
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
-from trading.api.api_actions.request_data.request_mkt_data import (
+from trading.api.api_actions.request_mkt_data.request_mkt_data import (
     request_market_data_price,
 )
 from trading.api.contracts.option_contracts import get_options_contract
@@ -155,7 +155,7 @@ def main() -> IBapi:
         call_premium = float(np.round(np.mean(call_price_list), 2))
 
         # request the price list for put side and compute the mid-point for the option price (ask+bid)/2
-        put_price_list = request_market_data_price(appl, call_option_contract)
+        put_price_list = request_market_data_price(appl, put_option_contract)
         put_premium = float(np.round(np.mean(put_price_list), 2))
 
         assert call_premium > 0, "call premium cannot be negative!"

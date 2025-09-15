@@ -2,36 +2,26 @@
 
 import time
 
-from ibapi.contract import Contract
+from ibapi.contract import Contract, ContractDetails
 
 from trading.api.ibapi_class import IBapi
 
 
-def get_contract_details(app: IBapi, contract: Contract) -> list:
+def get_contract_details(app: IBapi, contract: Contract) -> list[ContractDetails]:
     """Request contract details for a given contract (e.g., stocks or options)."""
     app.reqContractDetails(app.nextorderId, contract)
-    current_strike_list_len = 0
 
     if contract.secType == "STK":
-        while app.nextorderId not in app.stocks_strike_price_dict:
+        while app.nextorderId not in app.stocks_contract_details_dict:
             time.sleep(0.1)
 
-        return app.stocks_strike_price_dict[app.nextorderId]
+        return app.stocks_contract_details_dict[app.nextorderId]
 
-    elif contract.secType == "OPT":
-        ticker_symbol = contract.symbol
-        while ticker_symbol not in app.options_strike_price_dict:
+    if contract.secType == "OPT":
+        while app.nextorderId not in app.options_contract_details_dict:
             time.sleep(0.1)
-        # this loop makes sure that we get all the strike prices for the available option
-        while True:
-            if app.options_strike_price_dict[ticker_symbol]:
-                if len(app.options_strike_price_dict[ticker_symbol]) > current_strike_list_len:
-                    current_strike_list_len = len(app.options_strike_price_dict[ticker_symbol])
-                else:
-                    break
-            time.sleep(0.5)
 
-        return app.options_strike_price_dict[ticker_symbol]
+        return app.options_contract_details_dict[app.nextorderId]
 
     else:
         raise ValueError(f"contact security type should be STK or OPT, got {contract.secType}.")

@@ -8,7 +8,7 @@ from trading.api.ibapi_class import IBapi
 
 
 
-def request_market_data_price(app: IBapi, contract: Contract) -> list[float] | Any:
+def request_market_data_price(app: IBapi, contract: Contract) -> list[float]:
     """Request live point (i.e. not streaming: snapshot=True) market data for options or stocks."""
     app.reqMktData(app.nextorderId, contract, '', True, False, [])
 

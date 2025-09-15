@@ -21,7 +21,6 @@ def create_parent_order(order_id: int,
     order.orderType = 'LMT'
     order.lmtPrice = price
     order.allOrNone = allornone
-    order.algoStrategy = "Adaptive"
     order.eTradeOnly = False
     order.firmQuoteOnly = False
 

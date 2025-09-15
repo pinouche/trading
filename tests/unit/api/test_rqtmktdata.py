@@ -1,7 +1,7 @@
 
 import numpy as np
 from ibapi.contract import Contract
-from trading.api.api_actions.request_data.request_mkt_data import request_market_data_option_iv, request_market_data_price
+from trading.api.api_actions.request_mkt_data.request_mkt_data import request_market_data_option_iv, request_market_data_price
 from trading.api.ibapi_class import IBapi
 
 

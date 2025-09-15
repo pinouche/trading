@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import yaml
 
-from trading.core.data_models.data_models import ConfigModel
+from trading.core.data_models.config_data_models import ConfigModel
 
 
 def config_load(file_path: str) -> ConfigModel:

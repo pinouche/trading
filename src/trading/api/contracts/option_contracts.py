@@ -9,6 +9,7 @@ def get_options_contract(ticker: str,
                          contract_strike: float | str = "",
                          expiry_date: str | None = None,
                          right: str = "C") -> Contract:
+
     """Return the option contract object."""
     if expiry_date == "today":
         expiry_date = datetime.now().strftime("%Y%m%d")

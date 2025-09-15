@@ -4,18 +4,22 @@ import numpy as np
 from loguru import logger
 
 from trading.api.api_actions.request_contract_details.request_contract_details import get_contract_details
-from trading.api.api_actions.request_data.request_mkt_data import request_market_data_option_iv, request_market_data_price
+from trading.api.api_actions.request_mkt_data.request_mkt_data import request_market_data_option_iv, request_market_data_price
 from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 
+# TODO: make sure that get_options_strikes is working correctly
 
-def get_options_strikes(app: IBapi, ticker_symbol: str, date: str | None = None) -> list:
-    """Retrieve the list of available strike prices for a given option contract."""
-    contract = get_options_contract(ticker=ticker_symbol, expiry_date=date)
-    contract_details = get_contract_details(app, contract)
 
-    return contract_details
+def get_options_strikes(app: IBapi, ticker_symbol: str, date: str | None = None) -> list[float]:
+    option_contract = get_options_contract(ticker=ticker_symbol,
+                                           expiry_date=date)
+    # option_chains = get_options_parameters(app, option_contract)
+    option_chains = get_contract_details(app, option_contract)
+    strike_prices = [details.contract.strike for details in option_chains]
+
+    return strike_prices
 
 
 def get_current_stock_price(app: IBapi, ticker_symbol: str) -> np.float64:
@@ -40,11 +44,16 @@ def process_stock_ticker_iv(stock_ticker: str,
     stock_price = get_current_stock_price(app, stock_ticker)
 
     # Find strikes below and above
-    below_strikes = list_options_strike_price[list_options_strike_price <= stock_price]
-    above_strikes = list_options_strike_price[list_options_strike_price >= stock_price]
+    below_strikes = list_options_strike_price[list_options_strike_price < stock_price]
+    above_strikes = list_options_strike_price[list_options_strike_price > stock_price]
 
-    put_strike = np.max(below_strikes)
-    call_strike = np.min(above_strikes)
+    # Make sure they're sorted
+    below_strikes = np.sort(below_strikes)
+    above_strikes = np.sort(above_strikes)
+
+    # Second closest (i.e. second from the edge)
+    put_strike = below_strikes[-2] if len(below_strikes) >= 2 else None
+    call_strike = above_strikes[1] if len(above_strikes) >= 2 else None
 
     assert put_strike < call_strike, "put strike price should be below the call strike price."
 
@@ -59,12 +68,13 @@ def process_stock_ticker_iv(stock_ticker: str,
                                            contract_strike=call_strike,
                                            expiry_date=expiry_date)
     iv_call = request_market_data_option_iv(app, option_contract)
+    iv = (iv_put+iv_call)*100/2
 
-    logger.info(f"Closest price for stock: {stock_ticker}, "
+    logger.info(f"stock ticker: {stock_ticker}, "
                 f"put strike price: {put_strike},"
                 f"call strike price: {call_strike},"
                 f"stock price: {stock_price}, "
-                f"average option iv is: {(iv_put+iv_call)*100/2}%")
+                f"average option iv is: {iv}%")
 
     logger.info(f"current redId is {app.nextorderId}.")
 
