@@ -14,14 +14,16 @@ def get_contract_details(app: IBapi, contract: Contract) -> list[ContractDetails
     if contract.secType == "STK":
         while app.nextorderId not in app.stocks_contract_details_dict:
             time.sleep(0.1)
-
-        return app.stocks_contract_details_dict[app.nextorderId]
+        contract_details = app.stocks_contract_details_dict[app.nextorderId]
+        app.nextorderId += 1
+        return contract_details
 
     if contract.secType == "OPT":
         while app.nextorderId not in app.options_contract_details_dict:
             time.sleep(0.1)
-
-        return app.options_contract_details_dict[app.nextorderId]
+        contract_details = app.options_contract_details_dict[app.nextorderId]
+        app.nextorderId += 1
+        return contract_details
 
     else:
         raise ValueError(f"contact security type should be STK or OPT, got {contract.secType}.")

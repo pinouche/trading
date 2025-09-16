@@ -15,18 +15,13 @@ from trading.utils import get_next_friday
 
 
 @pytest.mark.parametrize("ticker_symbol", ["TSLA"])
-def test_place_order_strangle(app: IBapi, ticker_symbol: str) -> None:
+def test_place_short_order_strangle(app: IBapi, ticker_symbol: str) -> None:
     # === Get stock and mid-price ===
     expiry_date = get_next_friday()
-
-    # TODO: use reqSecDefOptParams instead of reqContractDetails to get all the strike prices
 
     iv, put_strike, call_strike = process_stock_ticker_iv(ticker_symbol,
                                                           app,
                                                           expiry_date)
-
-    print("PUT STRIKE", put_strike)
-    print("CALL STRIKE", call_strike)
 
     # === Define option contracts ===
     call_option_contract = get_options_contract(
@@ -35,7 +30,7 @@ def test_place_order_strangle(app: IBapi, ticker_symbol: str) -> None:
         expiry_date=expiry_date,
         right="C",
     )
-    call_option_contract_details = get_contract_details(app, call_option_contract)
+    call_option_contract_details = get_contract_details(app, call_option_contract)[0]
 
     put_option_contract = get_options_contract(
         ticker=ticker_symbol,
@@ -43,7 +38,7 @@ def test_place_order_strangle(app: IBapi, ticker_symbol: str) -> None:
         expiry_date=expiry_date,
         right="P",
     )
-    put_option_contract_details = get_contract_details(app, put_option_contract)
+    put_option_contract_details = get_contract_details(app, put_option_contract)[0]
 
     # === Get mid prices ===
     call_price_list = request_market_data_price(app, call_option_contract)
@@ -64,33 +59,23 @@ def test_place_order_strangle(app: IBapi, ticker_symbol: str) -> None:
 
     # === Create strangle BAG contract ===
 
-    print("CALL conId:", put_option_contract_details.conId)
-    print("PUT conId:", call_option_contract_details.conId)
-
-    assert 2 == 3
-
     strangle_contract = get_options_strangle_contract(call_option_contract,
-                                                      put_option_contract)
-
-    print("STRANGLE CONTRACT", strangle_contract)
+                                                      put_option_contract,
+                                                      call_option_contract_details.contract.conId,
+                                                      put_option_contract_details.contract.conId)
 
     # === Define combo order ===
-    app.nextorderId += 1
-    combo_limit_price = round(call_premium + put_premium, 2)
+    combo_limit_price = round(call_premium + put_premium, 2)*-1  # negative price (we sell a credit)
     combo_order = create_parent_order(
         app.nextorderId,
-        "SELL",
+        "BUY",
         combo_limit_price,
-        1,
-        True
+        quantity=1,
+        allornone=False
     )  # type: ignore[arg-type]
-
-    print("COMBO LIMIT PRICE", combo_limit_price)
 
     # === Place strangle order ===
     place_option_order(app, strangle_contract, combo_order)
-
-    print("WE ARE HERE")
 
     # === Wait until filled ===
     wait_until_order_is_filled(app)

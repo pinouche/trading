@@ -9,17 +9,14 @@ from trading.api.contracts.option_contracts import get_options_contract
 from trading.api.contracts.stock_contracts import get_stock_contract
 from trading.api.ibapi_class import IBapi
 
-# TODO: make sure that get_options_strikes is working correctly
-
 
 def get_options_strikes(app: IBapi, ticker_symbol: str, date: str | None = None) -> list[float]:
     option_contract = get_options_contract(ticker=ticker_symbol,
                                            expiry_date=date)
-    # option_chains = get_options_parameters(app, option_contract)
     option_chains = get_contract_details(app, option_contract)
     strike_prices = [details.contract.strike for details in option_chains]
 
-    return strike_prices
+    return sorted(strike_prices)
 
 
 def get_current_stock_price(app: IBapi, ticker_symbol: str) -> np.float64:
@@ -47,25 +44,20 @@ def process_stock_ticker_iv(stock_ticker: str,
     below_strikes = list_options_strike_price[list_options_strike_price < stock_price]
     above_strikes = list_options_strike_price[list_options_strike_price > stock_price]
 
-    # Make sure they're sorted
-    below_strikes = np.sort(below_strikes)
-    above_strikes = np.sort(above_strikes)
-
-    # Second closest (i.e. second from the edge)
-    put_strike = below_strikes[-2] if len(below_strikes) >= 2 else None
-    call_strike = above_strikes[1] if len(above_strikes) >= 2 else None
+    put_strike = below_strikes[-1]
+    call_strike = above_strikes[0]
 
     assert put_strike < call_strike, "put strike price should be below the call strike price."
 
     # get the corresponding put option contract and request details (we are interested in iv)
     option_contract = get_options_contract(ticker=stock_ticker,
-                                           contract_strike=put_strike,
+                                           contract_strike=float(put_strike),
                                            expiry_date=expiry_date)
     iv_put = request_market_data_option_iv(app, option_contract)
 
     # get the corresponding call option contract and request details (we are interested in iv)
     option_contract = get_options_contract(ticker=stock_ticker,
-                                           contract_strike=call_strike,
+                                           contract_strike=float(call_strike),
                                            expiry_date=expiry_date)
     iv_call = request_market_data_option_iv(app, option_contract)
     iv = (iv_put+iv_call)*100/2

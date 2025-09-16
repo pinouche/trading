@@ -10,12 +10,6 @@ def get_options_contract(ticker: str,
                          expiry_date: str | None = None,
                          right: str = "C") -> Contract:
 
-    """Return the option contract object."""
-    if expiry_date == "today":
-        expiry_date = datetime.now().strftime("%Y%m%d")
-    elif expiry_date is None:
-        expiry_date = ""
-
     contract = Contract()
     contract.symbol = ticker
     contract.secType = "OPT"
@@ -27,3 +21,5 @@ def get_options_contract(ticker: str,
     contract.multiplier = 100
 
     return contract
+
+
