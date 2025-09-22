@@ -2,7 +2,9 @@ import numpy as np
 import pytest
 from loguru import logger
 
-from trading.core.strategy.get_strike_and_stock import process_stock_ticker_iv
+from trading.core.strategy.get_strike_and_stock import (process_stock_ticker_iv,
+                                                        get_current_stock_price,
+                                                        pick_strikes_for_strategy)
 from trading.api.api_actions.place_orders.place_option_orders import place_option_order
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
 from trading.api.api_actions.request_mkt_data.request_mkt_data import request_market_data_price
@@ -14,19 +16,33 @@ from trading.api.orders.option_orders import create_parent_order
 from trading.utils import get_next_friday
 
 
+# TODO: fix the test below
+
 @pytest.mark.parametrize("ticker_symbol", ["TSLA"])
 def test_place_short_order_strangle(app: IBapi, ticker_symbol: str) -> None:
     # === Get stock and mid-price ===
     expiry_date = get_next_friday()
 
-    iv, put_strike, call_strike = process_stock_ticker_iv(ticker_symbol,
-                                                          app,
-                                                          expiry_date)
+    iv, strike_list = process_stock_ticker_iv(ticker_symbol,
+                                              app,
+                                              expiry_date)
+
+    # current stock price
+    stock_price = float(get_current_stock_price(app, ticker_symbol))
+
+    dict_prices = pick_strikes_for_strategy(strike_list,
+                                            stock_price,
+                                            strategy="strangle",
+                                            distance_n_strikes=0,
+                                            wing_width_n_strikes=0)
+
+    put_strike = dict_prices["put_short"]
+    call_strike = dict_prices["call_short"]
 
     # === Define option contracts ===
     call_option_contract = get_options_contract(
         ticker=ticker_symbol,
-        contract_strike=call_strike,
+        contract_strike=float(call_strike),
         expiry_date=expiry_date,
         right="C",
     )
@@ -34,7 +50,7 @@ def test_place_short_order_strangle(app: IBapi, ticker_symbol: str) -> None:
 
     put_option_contract = get_options_contract(
         ticker=ticker_symbol,
-        contract_strike=put_strike,
+        contract_strike=float(put_strike),
         expiry_date=expiry_date,
         right="P",
     )
