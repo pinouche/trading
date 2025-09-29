@@ -1,6 +1,6 @@
 import pytest
 from trading.api.ibapi_class import IBapi
-from trading.core.data_models.data_models import StockInfo
+from trading.core.data_models.config_data_models import StockInfo
 from trading.core.exceptions.checks import check_price_is_live_and_is_float
 from trading.core.exceptions.exceptions import PriceNotFloatError, PriceNotLiveError
 

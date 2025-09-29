@@ -1,17 +1,18 @@
 """Ibapi Class that inherits from both EWrapper and EClient."""
 
 from decimal import Decimal
+from loguru import logger
 
 from ibapi.client import EClient
-from ibapi.common import TickAttrib
+from ibapi.common import TickAttrib, SetOfString, SetOfFloat
 from ibapi.contract import Contract, ContractDetails
 from ibapi.execution import Execution
 from ibapi.order import Order
 from ibapi.order_state import OrderState
 from ibapi.wrapper import EWrapper
-from loguru import logger
 
-from trading.core.data_models.data_models import StockInfo
+from trading.core.data_models.config_data_models import StockInfo
+from trading.core.data_models.option_chains import OptionsChain
 
 
 class IBapi(EWrapper, EClient):
@@ -32,8 +33,9 @@ class IBapi(EWrapper, EClient):
         self.nextorderId: int | None = None
 
         # contract details for options and stocks
-        self.options_strike_price_dict: dict = {}
-        self.stocks_strike_price_dict: dict = {}
+        self.options_chain_dict = {}
+        self.options_contract_details_dict: dict = {}
+        self.stocks_contract_details_dict: dict = {}
 
         # data structure to hold current requests from reqMktData
         self.list_ask_bid_dict: dict = {}
@@ -48,20 +50,45 @@ class IBapi(EWrapper, EClient):
         self.nextorderId = orderId
         logger.info(f"The next valid order id is: {self.nextorderId}.")
 
-    def contractDetails(self, reqId: int, contractDetails: ContractDetails) -> None:
+    def contractDetails(self, reqId: int, contract_details: ContractDetails) -> None:
         """Callback function to receive contract details for option (OPT) type contracts."""
-        contract = contractDetails.contract
 
         # we use a different dict to store options and stocks data
-        if contract.secType == "OPT":
-            if contract.symbol not in self.options_strike_price_dict.keys():
-                self.options_strike_price_dict[contract.symbol] = []
-            self.options_strike_price_dict[contract.symbol].append(contract.strike)
+        if contract_details.contract.secType == "OPT":
+            if reqId not in self.options_contract_details_dict:
+                self.options_contract_details_dict[reqId] = []
+            self.options_contract_details_dict[reqId].append(contract_details)
 
-        elif contract.secType == "STK":
-            if reqId not in self.stocks_strike_price_dict.keys():
-                self.stocks_strike_price_dict[reqId] = []
-            self.stocks_strike_price_dict[reqId].append(contract)
+        elif contract_details.contract.secType == "STK":
+            self.stocks_contract_details_dict[reqId] = [contract_details]
+
+
+    def securityDefinitionOptionParameter(self,
+                                          reqId: int,
+                                          exchange: str,
+                                          underlyingConId: int,
+                                          tradingClass: str,
+                                          multiplier: int,
+                                          expirations: SetOfString,
+                                          strikes: SetOfFloat) -> None:
+        """Callback function to receive available strikes and expirations for an underlying."""
+
+        print(f"Received securityDefinitionOptionParameter for reqId {reqId}.")
+
+        self.options_chain_dict[reqId] = OptionsChain(
+            exchange=exchange,
+            underlyingConId=underlyingConId,
+            tradingClass=tradingClass,
+            multiplier=multiplier,
+            expirations=sorted(list(expirations)),
+            strikes=sorted(list(strikes)),
+        )
+
+    def securityDefinitionOptionParameterEnd(self, reqId: int) -> None:
+        """Called once all option chain data has been received for this reqId."""
+        print(f"Option chain request {reqId} completed. "
+              f"Found {len(self.options_chain_dict[reqId]['strikes'])} strikes "
+              f"and {len(self.options_chain_dict[reqId]['expirations'])} expirations.")
 
     def openOrder(self, orderId: int, contract: Contract, order: Order, orderState: OrderState) -> None:
         """Overwrite Ewrapper openOrder callback function."""

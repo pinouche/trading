@@ -5,13 +5,10 @@ from datetime import datetime
 from ibapi.contract import Contract
 
 
-def get_options_contract(ticker: str, contract_strike: float | str = "",
-                         expiry_date: str | None = None, right: str = "C") -> Contract:
-    """Return the option contract object."""
-    if expiry_date == "today":
-        expiry_date = datetime.now().strftime("%Y%m%d")
-    elif expiry_date is None:
-        expiry_date = ""
+def get_options_contract(ticker: str,
+                         contract_strike: float | str = "",
+                         expiry_date: str | None = None,
+                         right: str = "C") -> Contract:
 
     contract = Contract()
     contract.symbol = ticker
@@ -24,3 +21,5 @@ def get_options_contract(ticker: str, contract_strike: float | str = "",
     contract.multiplier = 100
 
     return contract
+
+

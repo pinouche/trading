@@ -61,8 +61,8 @@ def place_conditional_parent_child_orders(app: IBapi,
     """
     # create a sell order for stocks if price condition is met (price reaches the strike price)
 
-    contract_details = get_contract_details(app, contract)[-1]  # request contract details: returns a list of contract object
-    parent_price_condition = create_price_condition(contract_details, False, strike_price)
+    contract_details = get_contract_details(app, contract)[0]  # request contract details: returns a list of contract object
+    parent_price_condition = create_price_condition(contract_details.contract, False, strike_price)
     parent_order = create_parent_order(app.nextorderId,  # type: ignore
                                        "SELL",
                                        round(strike_price - config_vars.buffer_allowed_pennies, 2),
@@ -72,7 +72,7 @@ def place_conditional_parent_child_orders(app: IBapi,
     parent_order.transmit = False
 
     # create a buy order for stocks if price condition is met (price reaches the strike price)
-    child_price_condition = create_price_condition(contract_details, True, strike_price + premium)
+    child_price_condition = create_price_condition(contract_details.contract, True, strike_price + premium)
     child_order = create_child_order(app.nextorderId,  # type: ignore
                                      app.nextorderId + 1,  # type: ignore
                                      "BUY",
