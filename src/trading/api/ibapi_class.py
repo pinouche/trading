@@ -2,7 +2,6 @@
 
 from decimal import Decimal
 from loguru import logger
-import time
 
 from ibapi.client import EClient
 from ibapi.common import TickAttrib, SetOfString, SetOfFloat
