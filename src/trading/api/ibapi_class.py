@@ -1,5 +1,6 @@
 """Ibapi Class that inherits from both EWrapper and EClient."""
 
+import threading
 from decimal import Decimal
 from loguru import logger
 
@@ -31,6 +32,7 @@ class IBapi(EWrapper, EClient):
 
         # next valid order
         self.nextorderId: int | None = None
+        self._lock = threading.Lock()
 
         # contract details for options and stocks
         self.options_chain_dict = {}
@@ -47,8 +49,18 @@ class IBapi(EWrapper, EClient):
 
     def nextValidId(self, orderId: int | None) -> None:
         """Callback function to update the next valid order id"""
-        self.nextorderId = orderId
+        with self._lock:
+            self.nextorderId = orderId
         logger.info(f"The next valid order id is: {self.nextorderId}.")
+
+    def get_next_req_id(self) -> int:
+        """Get the next valid order id and increment it in a thread-safe way."""
+        with self._lock:
+            if self.nextorderId is None:
+                raise ValueError("nextorderId is None. Is the app connected?")
+            res = self.nextorderId
+            self.nextorderId += 1
+            return res
 
     def contractDetails(self, reqId: int, contract_details: ContractDetails) -> None:
         """Callback function to receive contract details for option (OPT) type contracts."""

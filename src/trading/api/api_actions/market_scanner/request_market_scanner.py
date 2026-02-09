@@ -29,7 +29,8 @@ def request_scanner(app: IBapi,
     if implied_vol is not None:
         filter_options.append(TagValue("impVolatAbove", implied_vol))
 
-    app.reqScannerSubscription(app.nextorderId, sub, scan_options, filter_options)
+    req_id = app.get_next_req_id()
+    app.reqScannerSubscription(req_id, sub, scan_options, filter_options)
 
     time.sleep(2.0)
 

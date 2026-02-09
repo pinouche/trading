@@ -36,7 +36,6 @@ def process_stock_ticker_iv(stock_ticker: str,
     # get the available strike prices
     list_options_strike_price = get_options_strikes(app, stock_ticker, expiry_date)
     list_options_strike_price = np.array(list_options_strike_price)
-    app.nextorderId += 1  # type: ignore
 
     # current stock price
     stock_price = get_current_stock_price(app, stock_ticker)
@@ -46,6 +45,11 @@ def process_stock_ticker_iv(stock_ticker: str,
     above_strikes = list_options_strike_price[list_options_strike_price > stock_price]
 
     # get closest strikes to current price
+    if below_strikes.size == 0 or above_strikes.size == 0:
+        logger.warning(f"Could not find strikes above and below for {stock_ticker}. "
+                       f"Stock price: {stock_price}, strikes: {list_options_strike_price}")
+        return float("-inf"), list_options_strike_price
+
     put_strike = below_strikes[-1]
     call_strike = above_strikes[0]
 
@@ -70,7 +74,9 @@ def process_stock_ticker_iv(stock_ticker: str,
                 f"stock price: {stock_price}, "
                 f"average option iv is: {iv}%")
 
-    logger.info(f"current redId is {app.nextorderId}.")
+    with app._lock:
+        current_id = app.nextorderId
+    logger.info(f"current redId is {current_id}.")
 
     return iv, np.array(list_options_strike_price)  # type: ignore
 
@@ -79,13 +85,20 @@ def get_strike_for_highest_iv(app: IBapi,
                               stock_list: list,
                               expiry_date: str | None = None) -> tuple[str, float, ndarray]:
     """Return the stock and the associated strike price with the highest implied volatility."""
+    import concurrent.futures
 
     max_ticker = None
     max_iv = float("-inf")
     max_strikes_list = None
 
-    for ticker in stock_list:
+    def task(ticker: str) -> tuple[str, float, ndarray]:
         iv, list_strikes = process_stock_ticker_iv(ticker, app, expiry_date)
+        return ticker, iv, list_strikes
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(task, stock_list))
+
+    for ticker, iv, list_strikes in results:
         if iv > max_iv:
             max_ticker = ticker
             max_iv = iv
