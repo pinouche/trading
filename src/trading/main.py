@@ -17,6 +17,9 @@ from trading.api.api_actions.place_orders.place_stock_orders import (
     place_simple_order,
 )
 from trading.api.api_actions.place_orders.utils import wait_until_order_is_filled
+from trading.api.api_actions.request_contract_details.request_contract_details import (
+    get_contract_details,
+)
 from trading.api.api_actions.request_mkt_data.request_mkt_data import (
     request_market_data_price,
 )
@@ -51,7 +54,9 @@ def main() -> IBapi:
 
     # Check if the API is connected via orderid
     while True:
-        if isinstance(appl.nextorderId, int):
+        with appl._lock:
+            next_id = appl.nextorderId
+        if isinstance(next_id, int):
             logger.info("We are connected")
             break
         else:
@@ -108,16 +113,17 @@ def main() -> IBapi:
 
     logger.info("Start the parallel computing...")
     # Here, we could use several defined strategies
-    stock_ticker, iv, put_strike, call_strike = get_strike_for_highest_iv(appl,
-                                                                          stock_list,
-                                                                          expiry_date)
+    stock_ticker, iv, list_strikes = get_strike_for_highest_iv(appl,
+                                                              stock_list,
+                                                              expiry_date)
 
-    appl.nextorderId += 1  # type: ignore
+    if stock_ticker is None:
+        logger.error("No valid stock found from the list with available strikes above and below spot.")
+        return appl
+
     logger.info(
         f"Stock ticker: {stock_ticker}"
         f"Implied volatility: {iv}"
-        f"Closest put strike price: {put_strike}"
-        f"Closest call strike price: {call_strike}"
     )
 
     # Get the current stock price
@@ -126,10 +132,16 @@ def main() -> IBapi:
     bid_price, ask_price = price_list[-2], price_list[-1]
     stock_price = np.round((ask_price + bid_price) / 2, 2)
 
-    appl.nextorderId += 1
-
     number_of_options = compute_number_of_options_to_trade(stock_ticker,
                                                            stock_price)
+
+    # Find strikes below and above
+    below_strikes = list_strikes[list_strikes < stock_price]
+    above_strikes = list_strikes[list_strikes > stock_price]
+
+    # get closest strikes to current price
+    put_strike = below_strikes[-1]
+    call_strike = above_strikes[0]
 
     # define option contract and request data for it.
     call_option_contract = get_options_contract(
@@ -161,22 +173,31 @@ def main() -> IBapi:
         assert call_premium > 0, "call premium cannot be negative!"
         assert put_premium > 0, "put premium cannot be negative!"
 
+        # Fetch conIds for the combo legs
+        call_details = get_contract_details(appl, call_option_contract)
+        put_details = get_contract_details(appl, put_option_contract)
+
+        call_conid = call_details[0].contract.conId
+        put_conid = put_details[0].contract.conId
+
         strangle_contract = get_options_strangle_contract(call_option_contract,
-                                                          put_option_contract)
+                                                          put_option_contract,
+                                                          call_conid,
+                                                          put_conid)
 
         # create an option sell order and fire it
         combo_limit_price = round(put_premium + call_premium - config_vars.buffer_allowed_pennies, 2)
+        combo_order_id = appl.get_next_req_id()
         combo_order = create_parent_order(
-            appl.nextorderId, "SELL", combo_limit_price, number_of_options, False
+            combo_order_id, "SELL", combo_limit_price, number_of_options, False
         )  # type: ignore[arg-type]
 
-        place_option_order(appl, strangle_contract, combo_order)
+        place_option_order(appl, strangle_contract, combo_order, order_id=combo_order_id)
         # make sure the order has been executed, received on TWS and all option orders are filled before proceeding.
         bool_status = wait_until_order_is_filled(
-            appl, config_vars.waiting_time_to_readjust_order
+            appl, order_id=combo_order_id, waiting_time=config_vars.waiting_time_to_readjust_order
         )
 
-    appl.nextorderId += 1  # type: ignore
 
     # get the stock contract for the above ticker
     stock_contract = get_stock_contract(ticker=stock_ticker)
@@ -198,13 +219,12 @@ def main() -> IBapi:
     )  # set the order to midprice (to auto track price changes)
 
     _ = wait_until_order_is_filled(appl)
-    appl.nextorderId += 1  # type: ignore
 
     logger.info("We are now placing the conditional order")
     print("We are now placing the conditional order")
 
     # place a parent sell order if condition is reached with an attached child buy conditional order.
-    place_conditional_parent_child_orders(appl, stock_contract, strike_price, premium, number_of_options)
+    place_conditional_parent_child_orders(appl, stock_contract, float(put_strike), put_premium + call_premium, number_of_options)
 
     return appl
 

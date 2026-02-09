@@ -41,7 +41,9 @@ def app(client_id: dict[str, int]) -> IBapi:
     api_thread.start()
 
     while True:
-        if isinstance(appl.nextorderId, int):
+        with appl._lock:
+            next_id = appl.nextorderId
+        if isinstance(next_id, int):
             logger.info("We are connected")
             break
         else:

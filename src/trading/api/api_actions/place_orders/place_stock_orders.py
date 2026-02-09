@@ -28,7 +28,8 @@ def place_simple_order(app: IBapi, contract: Contract, action: str, price: float
     else:
         raise ValueError(f"Valid actions are [BUY, SELL], got {action}.")
 
-    order = create_parent_order(app.nextorderId,  # type: ignore
+    order_id = app.get_next_req_id()
+    order = create_parent_order(order_id,
                                 action,
                                 round(price, 2),
                                 quantity,
@@ -40,7 +41,7 @@ def place_simple_order(app: IBapi, contract: Contract, action: str, price: float
         order.conditions.append(price_condition)
 
     order.transmit = True
-    app.placeOrder(app.nextorderId, contract, order)
+    app.placeOrder(order_id, contract, order)
 
 
 def place_conditional_parent_child_orders(app: IBapi,
@@ -60,10 +61,12 @@ def place_conditional_parent_child_orders(app: IBapi,
         - number_of_options: number of options we are trading
     """
     # create a sell order for stocks if price condition is met (price reaches the strike price)
+    parent_order_id = app.get_next_req_id()
+    child_order_id = app.get_next_req_id()
 
     contract_details = get_contract_details(app, contract)[0]  # request contract details: returns a list of contract object
     parent_price_condition = create_price_condition(contract_details.contract, False, strike_price)
-    parent_order = create_parent_order(app.nextorderId,  # type: ignore
+    parent_order = create_parent_order(parent_order_id,
                                        "SELL",
                                        round(strike_price - config_vars.buffer_allowed_pennies, 2),
                                        number_of_options * 100,
@@ -73,8 +76,8 @@ def place_conditional_parent_child_orders(app: IBapi,
 
     # create a buy order for stocks if price condition is met (price reaches the strike price)
     child_price_condition = create_price_condition(contract_details.contract, True, strike_price + premium)
-    child_order = create_child_order(app.nextorderId,  # type: ignore
-                                     app.nextorderId + 1,  # type: ignore
+    child_order = create_child_order(parent_order_id,
+                                     child_order_id,
                                      "BUY",
                                      round(strike_price + premium + config_vars.buffer_allowed_pennies, 2),
                                      number_of_options * 100,
@@ -82,6 +85,5 @@ def place_conditional_parent_child_orders(app: IBapi,
     child_order.conditions.append(child_price_condition)
     child_order.transmit = True
 
-    app.placeOrder(app.nextorderId, contract, parent_order)
-    app.placeOrder(child_order.orderId, contract, child_order)
-    app.nextorderId += 1  # type: ignore
+    app.placeOrder(parent_order_id, contract, parent_order)
+    app.placeOrder(child_order_id, contract, child_order)

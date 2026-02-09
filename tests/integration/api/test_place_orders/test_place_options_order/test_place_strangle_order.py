@@ -59,11 +59,9 @@ def test_place_short_order_strangle(app: IBapi, ticker_symbol: str) -> None:
     # === Get mid prices ===
     call_price_list = request_market_data_price(app, call_option_contract)
     call_premium = float(np.round(np.mean(call_price_list), 2))
-    app.nextorderId += 1
 
     put_price_list = request_market_data_price(app, put_option_contract)
     put_premium = float(np.round(np.mean(put_price_list), 2))
-    app.nextorderId += 1
 
     assert call_premium != put_premium, "very unlikely that call and put strikes are equal. please check."
 
@@ -82,8 +80,9 @@ def test_place_short_order_strangle(app: IBapi, ticker_symbol: str) -> None:
 
     # === Define combo order ===
     combo_limit_price = round(call_premium + put_premium, 2)*-1  # negative price (we sell a credit)
+    combo_order_id = app.get_next_req_id()
     combo_order = create_parent_order(
-        app.nextorderId,
+        combo_order_id,
         "BUY",
         combo_limit_price,
         quantity=1,
@@ -91,14 +90,13 @@ def test_place_short_order_strangle(app: IBapi, ticker_symbol: str) -> None:
     )  # type: ignore[arg-type]
 
     # === Place strangle order ===
-    place_option_order(app, strangle_contract, combo_order)
+    place_option_order(app, strangle_contract, combo_order, order_id=combo_order_id)
 
     # === Wait until filled ===
-    wait_until_order_is_filled(app)
-    app.nextorderId += 1  # type: ignore
+    wait_until_order_is_filled(app, order_id=combo_order_id)
 
     # === Assertions ===
-    assert app.order_status[app.nextorderId - 1]["remaining"] == 0
-    assert app.order_status[app.nextorderId - 1]["filled"] == 1
+    assert app.order_status[combo_order_id]["remaining"] == 0
+    assert app.order_status[combo_order_id]["filled"] == 1
 
     app.disconnect()

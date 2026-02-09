@@ -13,7 +13,6 @@ def test_request_data_price_options_contract(app: IBapi, option_contract: Contra
     assert len(price_list) == 2
     assert np.sum([isinstance(price, float) for price in price_list]) == 2
 
-    app.nextorderId += 1  # type: ignore
     app.disconnect()
 
 
@@ -23,5 +22,4 @@ def test_request_data_iv_options_contract(app: IBapi, option_contract: Contract)
 
     assert isinstance(implied_volatility, float)
 
-    app.nextorderId += 1  # type: ignore
     app.disconnect()
